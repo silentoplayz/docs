@@ -149,7 +149,7 @@ docker run -d --name searxng -p 8080:8080 -v ./searxng:/etc/searxng --restart al
 
 ### 4. GUI configuration
 
-Navigate to **Workspace > Documents > Document Settings > Web Params**:
+Navigate to **Admin Panel > Settings > Web Search**:
 ![SearXNG GUI Configuration](/img/tutorial_searxng_config.png)
 
 ## Google PSE API
