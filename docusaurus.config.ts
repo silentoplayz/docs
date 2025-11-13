@@ -1,7 +1,7 @@
 import { Config } from "@docusaurus/types";
 import type * as Preset from "@docusaurus/preset-classic";
-
 import { themes as prismThemes } from "prism-react-renderer";
+import { sortSidebarItems } from "./src/sidebar-sorter";
 
 const config: Config = {
 	title: "Open WebUI",
@@ -51,6 +51,16 @@ const config: Config = {
 					// Remove this to remove the "edit this page" links.
 					editUrl: "https://github.com/open-webui/docs/blob/main",
 					exclude: ["**/tab-**/**"],
+					async sidebarItemsGenerator({ defaultSidebarItemsGenerator, ...args }) {
+						const sidebarItems = await defaultSidebarItemsGenerator(args);
+						// This is the new sorting logic
+						return sidebarItems.map((item) => {
+							if (item.type === "category" && item.items.length > 0) {
+								return { ...item, items: sortSidebarItems(item.items) };
+							}
+							return item;
+						});
+					},
 				},
 				// blog: false,
 				blog: {
