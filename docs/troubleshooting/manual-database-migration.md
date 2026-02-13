@@ -23,6 +23,12 @@ You need manual migration only if:
 - A developer has instructed you to run migrations manually
 :::
 
+:::tip Quick Fix: Migration Errors After Upgrading
+**"No such table"** — Your migrations didn't apply. Enter your container, set the required environment variables ([see Step 2](#step-2-diagnose-current-state)), and run `alembic upgrade head`. See [details](#no-such-table-errors).
+
+**"Table already exists"** — A previous migration partially completed. You need to stamp the partially-applied migration and then upgrade. See [details](#table-already-exists-errors).
+:::
+
 :::danger Critical Warning
 Manual migration can corrupt your database if performed incorrectly. **Always create a verified backup before proceeding.**
 :::
@@ -409,6 +415,93 @@ INFO:     [main] Open WebUI starting on http://0.0.0.0:8080
 - No JavaScript console errors
 
 ## Troubleshooting
+
+### "No such table" Errors
+
+**Symptom:** Open WebUI crashes on startup with an error like:
+
+```
+sqlalchemy.exc.OperationalError: (sqlite3.OperationalError) no such table: access_grant
+```
+
+or similar errors referencing other missing tables (e.g., `message`, `channel`).
+
+**Cause:** One or more Alembic migrations did not apply successfully. This can happen when:
+
+- A migration silently failed during an automated upgrade (Open WebUI logs the error but continues startup)
+- The upgrade process was interrupted while migrations were running
+- `ENABLE_DB_MIGRATIONS=False` was set in the environment (disables automatic migrations on startup)
+- Multiple workers or replicas attempted to run migrations simultaneously
+
+:::warning ENABLE_DB_MIGRATIONS Does Not Fix This
+Setting `ENABLE_DB_MIGRATIONS=True` (the default) only tells Open WebUI to **attempt** automatic migrations on the next startup. It will **not** retroactively fix migrations that already failed or were skipped. If your database is already in a bad state, you must apply the migrations manually.
+:::
+
+**Solution:**
+
+Follow [Step 2](#step-2-diagnose-current-state) to access your environment, then run:
+
+```bash title="Terminal"
+cd /app/backend/open_webui  # Docker
+alembic upgrade head
+```
+
+This will apply all pending migrations, including creating any missing tables. After a successful migration, restart Open WebUI normally.
+
+If you see additional errors during the manual migration (such as ["table already exists"](#table-already-exists-errors)), check the other troubleshooting sections below for specific error messages.
+
+### "Table Already Exists" Errors
+
+**Symptom:** Running `alembic upgrade head` fails with:
+
+```
+sqlalchemy.exc.OperationalError: (sqlite3.OperationalError) table chat_message already exists
+```
+
+or similar errors for other tables (e.g., `access_grant`).
+
+**Cause:** A previous migration **partially completed** — the table was created in the database, but Alembic's version tracking was not updated (typically because the migration was interrupted during the data backfill step that runs after table creation). Alembic still thinks the migration hasn't been applied, so it tries to create the table again.
+
+**Diagnosis:**
+
+```bash title="Terminal - Identify the Stuck Migration"
+# Check where Alembic thinks you are
+alembic current
+# Example output: 374d2f66af06 (head)
+
+# Check what the next migration is
+alembic history
+# Look for the migration immediately after your current version
+# Example: 374d2f66af06 -> 8452d01d26d7, Add chat_message table
+```
+
+**Solution:**
+
+Since the table already exists, you need to tell Alembic to **skip** the migration that creates it, then continue with the remaining migrations:
+
+```bash title="Terminal - Stamp and Upgrade"
+# 1. Stamp the migration that's failing (marks it as applied without running it)
+#    Replace <revision_id> with the revision from the error
+alembic stamp <revision_id>
+# Example: alembic stamp 8452d01d26d7
+
+# 2. Verify the stamp worked
+alembic current
+# Should now show the stamped revision
+
+# 3. Continue upgrading to apply remaining migrations
+alembic upgrade head
+```
+
+:::warning When alembic stamp Is Appropriate
+This is one of the few situations where `alembic stamp` is the correct fix. The table **does** already exist in your database, so the migration's DDL work is already done. Stamping simply updates Alembic's version tracking to match reality.
+
+**Do NOT use stamp to skip migrations where the table does NOT exist** — that would cause the ["no such table"](#no-such-table-errors) error later.
+:::
+
+If `alembic upgrade head` fails again with another "table already exists" error for a different migration, repeat the stamp-and-upgrade process for each stuck migration.
+
+**If the table already exists but the data backfill was incomplete** (e.g., `chat_message` table exists but is empty), the stamped migration will skip the backfill. In most cases, Open WebUI will continue to function normally and populate the table during regular use. If you need the historical data backfilled, you can run the backfill manually — see the [Getting Help](#getting-help) section.
 
 ### "Required environment variable not found"
 
