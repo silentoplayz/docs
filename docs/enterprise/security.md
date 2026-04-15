@@ -1,5 +1,5 @@
 ---
-sidebar_position: 3
+sidebar_position: 2
 title: "Security"
 ---
 
@@ -7,7 +7,7 @@ title: "Security"
 
 For enterprise organizations, AI adoption isn't just a technology decision, it's a security decision. Every model query, every document uploaded, and every workflow automated represents data that needs protection.
 
-Open WebUI is built with security as a foundational principle. Whether you are navigating strict regulatory requirements or simply committed to protecting your organization's intellectual property, Open WebUI provides the controls necessary to deploy AI confidently.
+Open WebUI is built with security as a core priority. Whether you are navigating strict regulatory requirements or simply committed to protecting your organization's intellectual property, Open WebUI provides controls to help you deploy AI with confidence. As with any self-hosted software, the deploying organization is responsible for securing its environment, infrastructure, and configuration.
 
 ### Security Architecture
 
@@ -43,7 +43,7 @@ General best-practice guidance is available in our [hardening documentation](/ge
 
 ### Identity & Access Management
 
-Seamless integration with your existing identity infrastructure eliminates friction while maintaining security boundaries.
+Seamless integration with your existing identity infrastructure reduces friction while maintaining security boundaries.
 
 #### Enterprise Identity Integration
 
@@ -69,7 +69,7 @@ For regulated industries and security-conscious organizations, visibility into s
 
 * **Infrastructure-Level Logging** ,  Containerized architecture allows standard output streams to be piped directly to your logging infrastructure (Splunk, Datadog, ELK).
 * **Event Tracking** ,  Track API usage and system events to monitor for anomalies.
-* **Retention Controls** ,  Because you own the database, you control the data retention policies, ensuring data is purged or archived according to your compliance schedules.
+* **Retention Controls** ,  Because you own the database, you control the data retention policies, so data can be purged or archived according to your compliance schedules.
 
 #### Data Residency
 
@@ -80,7 +80,7 @@ For organizations with geographic data requirements, whether driven by GDPR, dat
 
 #### For Security Teams
 
-You are not introducing a "black box" into your environment. Open WebUI's architecture gives you visibility and control, integrating with your existing security tooling rather than creating blind spots.
+Open WebUI's publicly auditable codebase gives you visibility and control, integrating with your existing security tooling rather than creating blind spots.
 
 #### For Compliance Officers
 
@@ -88,7 +88,7 @@ The technical controls exist to support your compliance posture. Whether you are
 
 #### For IT Leadership
 
-User management doesn't become another silo. Open WebUI works with your existing identity infrastructure, reducing administrative overhead and ensuring consistent access policies across your tooling.
+User management doesn't become another silo. Open WebUI works with your existing identity infrastructure, reducing administrative overhead and helping maintain consistent access policies across your tooling.
 
 --- 
 
