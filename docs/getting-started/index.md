@@ -30,7 +30,7 @@ Everything you need for a working setup. Choose Docker for the fastest path, Pyt
 
 ---
 
-## ✨ Essentials for New Users
+## Essentials for Open WebUI
 
 **Installed and chatting — now what?**
 
