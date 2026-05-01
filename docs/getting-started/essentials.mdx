@@ -9,12 +9,71 @@ You have installed Open WebUI, connected a provider, and had your first conversa
 
 Work through in order, or jump to the section you need:
 
-1. [**Plugins**](#plugins)
-2. [**Tool calling**](#tool-calling)
+1. [**Tool calling**](#tool-calling)
+2. [**Plugins**](#plugins)
 3. [**Task models**](#task-models)
 4. [**Context management**](#context-management)
 5. [**Basic RAG**](#basic-rag)
 6. [**Open Terminal**](#open-terminal)
+
+---
+
+## Tool calling
+
+Without tools, an LLM can only generate text. With tools, it can look things up, run code, and take actions on your behalf. You attach a **Tool** to a chat (or to a model), and the model decides during its response when to call it and with what arguments. Open WebUI executes the call, feeds the result back, and the model continues with that new information.
+
+:::info Why this is first
+Tool calling is what turns a chat model into an agent. Getting this set up unlocks most of the advanced features covered in the rest of this page.
+:::
+
+There are two things worth understanding early on.
+
+### Understanding tool-calling modes
+
+Open WebUI has two ways of connecting a model to its tools, and a common source of confusion is that the one labeled "Default" is not the one most people should be using. The naming makes more sense once you understand the history and Open WebUI's design philosophy.
+
+:::tip Native Mode is recommended for most users
+**Default Mode** is the legacy approach and exists for broad compatibility. If your model supports function calling (most modern models do), **Native Mode** is the better choice. See below for how to switch.
+:::
+
+A core goal of Open WebUI is to support the widest possible range of models, from cutting-edge frontier APIs to tiny quantized models running on a Raspberry Pi. When Open WebUI first introduced tool calling, most models did not have built-in function-calling APIs. The only way to give a model tools was to describe them in the system prompt as plain text and then parse the model's response to figure out which tool it was trying to call. This prompt-based approach is what Open WebUI calls **Default Mode**. It was the original (and at the time, only) implementation, and it is now considered legacy handling. It remains the system default because it is the lowest common denominator: any model that can follow instructions in a system prompt can use it, no special API support required.
+
+Since then, most model providers have added native function-calling support. Open WebUI calls this **Native Mode**. The model receives tool definitions as a structured part of its API request and returns structured tool calls in its response. It is faster, more reliable, preserves KV cache, and is required for all of Open WebUI's built-in system tools (Memory, Notes, Knowledge, Web Search, Image Gen, Code Interpreter). All new tool-calling features are built for Native Mode. But it only works with models that actually expose a function-calling API, which is why it cannot be the universal default.
+
+In practice, most users should enable Native Mode. Every major current model supports it (OpenAI, Anthropic, Gemini, Llama 3.1+, Qwen 2.5+, DeepSeek, GLM, and others). You can set it once for your entire instance:
+
+:::tip Set Native Mode globally in one step
+**Admin Panel > Settings > Models** → click the **Settings** button at the **top right** of the models list → set **Function Calling = Native** → save. Every current and future model inherits the setting.
+:::
+
+- **Per model:** **Admin Panel > Settings > Models > [your model] > Model Parameters > Function Calling = Native**
+- **Per chat:** In the chat's **Chat Controls** (right sidebar)
+
+If you are running an older local model or a fine-tune that does not expose a function-calling API, keep that specific model on Default Mode. For everything else, Native Mode is the better choice.
+
+### Choosing tools to enable
+
+Many of the tools people look for are already built into Open WebUI and just need to be turned on: **web search**, **code execution**, **image generation**, **memory**, and **knowledge-base retrieval** are all available without installing any plugins. Once enabled, these appear automatically as system tools when using Native Mode.
+
+For anything not built in, the [**Open WebUI Community site**](https://openwebui.com/) is worth browsing. A few categories to give a sense of what is available:
+
+- **Observability / cost tracking**: Langfuse, OpenLit, Portkey. Log every chat turn, token usage, and latency to your own stack.
+- **Smart-home / automation**: Home Assistant tools that let the model control devices, routines, and scenes.
+- **Research**: arXiv, PubMed, Semantic Scholar, Wolfram Alpha. Structured results with real citations.
+- **Issue tracking / messaging**: Jira, Linear, GitHub Issues, Slack, Discord, email.
+- **Databases / APIs**: read-only SQL against your own database, or calls to your internal API.
+- **Domain-specific**: weather, stocks, crypto, shipping tracking, recipes, and many more.
+
+Tools appear in the `+` menu in the chat input. The model only sees the tools you have enabled for that conversation.
+
+:::tip The community site is worth a look
+The [**Open WebUI Community**](https://openwebui.com/) hosts thousands of community-built plugins. Before writing anything yourself, browse what is already there: sort by popularity, filter by category, and skim a few pages. Most of the time, someone has already built what you need (or something close enough to fork).
+:::
+
+More detail:
+- [Tools reference](/features/extensibility/plugin/tools)
+- [Tool-calling modes (Default vs Native)](/features/extensibility/plugin/tools#tool-calling-modes-default-vs-native)
+- [Open WebUI Community: Tools, Functions, Models](https://openwebui.com/)
 
 ---
 
@@ -47,7 +106,9 @@ Both Tools and Functions can be browsed and installed from the [**Open WebUI Com
 
 The [**Open WebUI Community site**](https://openwebui.com/) hosts the one-click catalog for both Tools and Functions. Pick one, click "Get", paste it into the admin panel, enable it, and configure its **valves** (the plugin's settings).
 
-Whenever you think "it would be nice if Open WebUI did X," it almost certainly already does via a plugin. **Always browse the community site first.** There are thousands of plugins already written, and the one you need is usually already there. Even if nothing matches exactly, the closest hit is usually only about 20 lines off from what you want and you can fork it from the admin panel.
+:::note Before you build, browse
+Whenever you think "it would be nice if Open WebUI did X," it almost certainly already does via a plugin. There are thousands of plugins already written, and the one you need is usually already there. Even if nothing matches exactly, the closest hit is usually only about 20 lines off from what you want and you can fork it from the admin panel.
+:::
 
 Reference reading:
 - [Plugin overview](/features/extensibility)
@@ -57,57 +118,11 @@ Reference reading:
 
 ---
 
-## Tool calling
-
-Without tools, an LLM can only generate text. With tools, it can look things up, run code, and take actions on your behalf. You attach a **Tool** to a chat (or to a model), and the model decides during its response when to call it and with what arguments. Open WebUI executes the call, feeds the result back, and the model continues with that new information.
-
-There are two things worth understanding early on.
-
-### Understanding tool-calling modes
-
-Open WebUI has two ways of connecting a model to its tools, and a common source of confusion is that the one labeled "Default" is not the one most people should be using. The naming makes more sense once you understand the history and Open WebUI's design philosophy.
-
-A core goal of Open WebUI is to support the widest possible range of models, from cutting-edge frontier APIs to tiny quantized models running on a Raspberry Pi. When Open WebUI first introduced tool calling, most models did not have built-in function-calling APIs. The only way to give a model tools was to describe them in the system prompt as plain text and then parse the model's response to figure out which tool it was trying to call. This prompt-based approach is what Open WebUI calls **Default Mode**. It was the original (and at the time, only) implementation, and it is now considered legacy handling. It remains the system default because it is the lowest common denominator: any model that can follow instructions in a system prompt can use it, no special API support required.
-
-Since then, most model providers have added native function-calling support. Open WebUI calls this **Native Mode**. The model receives tool definitions as a structured part of its API request and returns structured tool calls in its response. It is faster, more reliable, preserves KV cache, and is required for all of Open WebUI's built-in system tools (Memory, Notes, Knowledge, Web Search, Image Gen, Code Interpreter). All new tool-calling features are built for Native Mode. But it only works with models that actually expose a function-calling API, which is why it cannot be the universal default.
-
-In practice, most users should enable Native Mode. Every major current model supports it (OpenAI, Anthropic, Gemini, Llama 3.1+, Qwen 2.5+, DeepSeek, GLM, and others). You can set it once for your entire instance:
-
-- **Globally (recommended):** In **Admin Panel > Settings > Models**, click the **Settings** button at the **top right** of the models list. That opens **global model parameters**. Set **Function Calling = Native**, save, and every current and future model inherits the setting.
-- **Per model:** **Admin Panel > Settings > Models > [your model] > Model Parameters > Function Calling = Native**
-- **Per chat:** In the chat's **Chat Controls** (right sidebar)
-
-If you are running an older local model or a fine-tune that does not expose a function-calling API, keep that specific model on Default Mode. For everything else, Native Mode is the better choice.
-
-### Choosing tools to enable
-
-Many of the tools people look for are already built into Open WebUI and just need to be turned on: **web search**, **code execution**, **image generation**, **memory**, and **knowledge-base retrieval** are all available without installing any plugins. Once enabled, these appear automatically as system tools when using Native Mode.
-
-For anything not built in, the [**Open WebUI Community site**](https://openwebui.com/) is worth browsing. A few categories to give a sense of what is available:
-
-- **Observability / cost tracking**: Langfuse, OpenLit, Portkey. Log every chat turn, token usage, and latency to your own stack.
-- **Smart-home / automation**: Home Assistant tools that let the model control devices, routines, and scenes.
-- **Research**: arXiv, PubMed, Semantic Scholar, Wolfram Alpha. Structured results with real citations.
-- **Issue tracking / messaging**: Jira, Linear, GitHub Issues, Slack, Discord, email.
-- **Databases / APIs**: read-only SQL against your own database, or calls to your internal API.
-- **Domain-specific**: weather, stocks, crypto, shipping tracking, recipes, and many more.
-
-Tools appear in the `+` menu in the chat input. The model only sees the tools you have enabled for that conversation.
-
-:::tip The community site is worth a look
-The [**Open WebUI Community**](https://openwebui.com/) hosts thousands of community-built plugins. Before writing anything yourself, browse what is already there: sort by popularity, filter by category, and skim a few pages. Most of the time, someone has already built what you need (or something close enough to fork).
-:::
-
-More detail:
-- [Tools reference](/features/extensibility/plugin/tools)
-- [Tool-calling modes (Default vs Native)](/features/extensibility/plugin/tools#tool-calling-modes-default-vs-native)
-- [Open WebUI Community: Tools, Functions, Models](https://openwebui.com/)
-
----
-
 ## Task models
 
-This is the highest-leverage change you can make right after install, because the default is silently costing you money, latency, and patience.
+:::info Good to know
+By default, background tasks (titles, tags, autocomplete) use your main chat model. Setting a dedicated task model is the easiest way to improve speed and reduce unnecessary API costs.
+:::
 
 Every time Open WebUI needs a short piece of "thinking" for a UI feature (writing a chat **title** for the sidebar, generating **tags**, suggesting **follow-up questions**, powering the **autocomplete** in the prompt box) it calls a **Task Model**. By default that task model is whatever main model you are currently chatting with, which means:
 
@@ -115,14 +130,16 @@ Every time Open WebUI needs a short piece of "thinking" for a UI feature (writin
 - On a slow local model, every keystroke feels laggy because autocomplete is waiting on a 30B-parameter model.
 - A reasoning model (o1, r1, Claude with extended thinking) spends five seconds *thinking* before producing a three-word title.
 
-These costs are easy to miss because they happen in the background. Fix them first.
+These run in the background, so they are easy to overlook. A dedicated task model is a small change that makes a noticeable difference.
 
 **Fix:** In **Admin Panel > Settings > Interface**, set a dedicated Task Model. There are two fields, because the right choice depends on what your main chat model is:
 
-- **Task Model (External)**: used when you are chatting with a cloud model (OpenAI, Anthropic, etc.). Set this to a fast, cheap, *non-reasoning* cloud model like `gpt-5-nano`, `gemini-2.5-flash-lite`, or `llama-3.1-8b-instant`.
-- **Task Model (Local)**: used when you are chatting with a local model (Ollama, llama.cpp, vLLM). Set this to a tiny local model like `qwen3:1b`, `gemma3:1b`, or `llama3.2:3b`.
+:::tip Recommended task models
+- **Task Model (External)**: Set to a fast, cheap, *non-reasoning* cloud model like `gpt-5-nano`, `gemini-2.5-flash-lite`, or `llama-3.1-8b-instant`.
+- **Task Model (Local)**: Set to a tiny local model like `qwen3:1b`, `gemma3:1b`, or `llama3.2:3b`.
 
 The main chat experience does not change. The background chores just stop dragging.
+:::
 
 While you are in the Interface settings, you can also disable these chores entirely if you are on a low-spec machine or simply do not want them. Each one has both an **admin toggle** in the same page and an **environment variable**:
 
@@ -133,7 +150,9 @@ While you are in the Interface settings, you can also disable these chores entir
 | Chat title generation | **Title Generation** | `ENABLE_TITLE_GENERATION=False` |
 | Tag generation | **Tags Generation** | `ENABLE_TAGS_GENERATION=False` |
 
-Autocomplete is the single biggest "make it snappy" toggle on weak hardware. It fires on every keystroke, so a slow task model turns the whole prompt box into molasses.
+:::tip Performance on weak hardware
+Autocomplete is the single biggest "make it snappy" toggle on weak hardware. It fires on every keystroke, so a slow task model turns the whole prompt box into molasses. Disable it first if the UI feels sluggish.
+:::
 
 More detail: [Performance & RAM: Dedicated Task Models](/troubleshooting/performance#1-dedicated-task-models).
 
@@ -145,7 +164,9 @@ After enough back-and-forth you will eventually see:
 
 > `The prompt is too long: 207601, model maximum context length: 202751`
 
-This error does **not** come from Open WebUI. It comes from your model provider. Every time you send a new message, the *entire* conversation (system prompt, all previous turns, attached files, tool call results, and your new message) is sent as the "prompt." When the sum exceeds the model's context window, the provider rejects the request.
+:::note This is not an Open WebUI bug
+This error comes from your model provider, not from Open WebUI. Every time you send a message, the *entire* conversation (system prompt, all previous turns, attached files, tool call results, and your new message) is sent as the "prompt." When the sum exceeds the model's context window, the provider rejects the request.
+:::
 
 Open WebUI intentionally does not ship a built-in trimmer, because:
 
@@ -153,9 +174,11 @@ Open WebUI intentionally does not ship a built-in trimmer, because:
 - Every model has a **different context window** (8k to 1M+).
 - Every deployment wants a **different policy** (trim by tokens, by turns, by message count, drop attachments first, summarize older messages, etc.).
 
-There is no single correct answer. The supported approach is to install a **filter Function** that trims the conversation on your terms. Community filters for most common policies already exist and can be installed with one click; if none fits, the code is short enough to copy and adapt.
+There is no single correct answer. The supported approach is to install a **filter Function** that trims the conversation on your terms.
 
-Full guide, including a minimal "newest N turns" filter you can paste into your instance: [Troubleshooting: Context Window / Prompt Too Long](/troubleshooting/context-window).
+:::tip Quick fix
+Community filters for most common policies already exist and can be installed with one click. If none fits, the code is short enough to copy and adapt. See the full guide including a minimal "newest N turns" filter: [Troubleshooting: Context Window / Prompt Too Long](/troubleshooting/context-window).
+:::
 
 ---
 
@@ -174,7 +197,9 @@ The defaults are reasonable for getting started. When you outgrow them, there ar
 - **Content extraction engine.** The default uses `pypdf`, which leaks memory during heavy ingestion. For anything beyond casual use, switch to **Tika** or **Docling** via `CONTENT_EXTRACTION_ENGINE`.
 - **Vector database.** The default ChromaDB (local SQLite-backed) does not tolerate multi-worker deployments. At scale, use **Milvus**, **Qdrant**, or **PGVector**.
 
+:::note When to worry about this
 None of these matter for "a single user with a handful of PDFs." All of them start mattering the moment you have 100 documents or 10 concurrent users.
+:::
 
 More detail:
 - [RAG overview](/features/chat-conversations/rag/)
@@ -187,7 +212,9 @@ More detail:
 
 If "run Python" is too restrictive and you want the model to actually work on your machine (clone repos, install packages, run test suites, spin up a local preview of a website, iterate on a data report against a real CSV), that is what [**Open Terminal**](/features/open-terminal) is for. It connects a real shell (sandboxed in a Docker container by default, or bare-metal if you want) as a tool the model can call the same way it calls any other tool. In-chat file browser, live web previews, and skill definitions are included.
 
+:::tip Try this
 This is the biggest "aha" feature once you get past basic chat. It turns Open WebUI from a chat UI into a place where the model actually builds things for you. If Native Mode is on and you have given the model a capable terminal, ask it to build you a small app or run an analysis on a folder of files and watch it go.
+:::
 
 More detail:
 - [Open Terminal: give your AI a real computer](/features/open-terminal)

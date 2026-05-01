@@ -1,0 +1,153 @@
+---
+sidebar_position: 3
+title: "Astellas Pharma Inc."
+description: "How Astellas Pharma Inc. built a secure, flexible internal AI platform with Open WebUI on Azure, enabling 3,000+ employees to create, customize, and share generative AI models. Users organically built 420+ custom models and reported a +43 NPS across the organization."
+keywords: ["Astellas Pharma AI", "Open WebUI case study", "pharmaceutical AI platform", "enterprise LLM", "private AI deployment", "Azure AKS AI", "RAG internal data", "AI productivity", "secure generative AI", "custom AI models pharma"]
+---
+
+# Astellas Employees Build 420+ Custom AI Models on a Secure, Self-Hosted Platform with Open WebUI
+
+![Astellas Pharma Inc.](/images/enterprise/customers/astellas-pharma/hero.png)
+
+## Overview
+
+:::info
+How Astellas Pharma Inc. built a secure, flexible internal AI platform with **Open WebUI** on Azure, enabling **3,000+ employees** to create, customize, and share generative AI models. Users organically built **420+ custom models** and reported a **+43 NPS** across the organization.
+:::
+
+### At a Glance
+
+- **Users**: 3,200+ total; 800+ advanced users with access to frontier models
+- **Region**: Global (headquartered in Tokyo, Japan)
+- **Industry**: Pharmaceutical
+- **Deployment**: Azure AKS (private endpoints)
+- **Models**: Azure OpenAI, Gemini, DeepSeek, Perplexity
+- **Time-to-deploy**: ~1 month (April–May 2025)
+- **Adoption**: 30–40% weekly active users sustained over five months
+- **Key Results**: 420+ custom models created, 68% of users report significant efficacy gains, +43 NPS
+
+
+## About Astellas Pharma Inc.
+
+[Astellas Pharma Inc.](https://www.astellas.com/) is a global life sciences company engaged in the research & development, sales & marketing, and manufacturing of prescription drugs. With operations in roughly 70 countries and nearly 20,000 employees and contractors, Astellas is driven by a mission to turn innovative science into VALUE for patients worldwide.
+
+## The Challenge: Flexible, Secure AI Without Vendor Lock-In
+
+As generative AI capabilities advanced rapidly, Astellas needed a platform that could keep pace, without tying the organization to a single model provider. The company operates across dozens of countries, manages complex regulatory landscapes, and supports scientific workflows that span multiple languages and disciplines. Third-party SaaS tools offered limited integration options, restricted customization, and lacked the security and compliance controls a global pharmaceutical company requires.
+
+The goal: deploy a **secure, self-hosted AI platform** that gave every department, from R&D and Clinical Development to Pharmacovigilance and Compliance, the flexibility to leverage cutting-edge models while maintaining full control over security, compliance, and data governance.
+
+**Key Requirements**
+
+- **Flexible model selection**: freedom to choose and switch between providers
+- **Option to use locally-hosted models** for sensitive analysis
+- **Capability to create custom models** tailored to specific workflows
+- **Secure sharing and joint development** of models within defined groups
+- **Technical integration** with internal and external systems
+
+## The Solution: Open WebUI on Azure
+
+Open WebUI was selected for its **flexibility, fine-grained permission controls, and scalable architecture**, allowing Astellas to host entirely within their secured private environment while supporting both custom model creation and group-based collaboration.
+
+**Architecture Highlights**
+
+- **Compute / Orchestration**: Kubernetes (AKS) cluster with autoscaling based on demand 
+- **Storage / Database**: Azure Database for PostgreSQL (encrypted at rest; backups aligned to internal policy) 
+- **Networking**: VNet-isolated; Application Gateway with private endpoints for LLM APIs
+- **Secrets**: Azure Key Vault integrated with Open WebUI for secure credential management 
+- **CI/CD**: Azure DevOps pipelines for upgrades, configuration deployment, and governance controls 
+- **Logging / Monitoring**: API Management Service, Azure Dashboards, Databricks
+- **Security Controls**: MFA via IdP, RBAC by group, data residency enforced
+ 
+
+> “Open WebUI allowed us to create and share custom AI models securely across the entire company, while giving us the flexibility to leverage the full potential of any cutting-edge model available.” - Generative AI Team Manager, Astellas
+
+## Models & Data Handling
+
+Astellas runs a **multi-model, multi-provider strategy** that gives teams the right tool for every task:
+
+- **Primary**: Azure OpenAI models
+- **Research augmentation**: Gemini, DeepSeek, Perplexity (web search augmentation)
+- **Model selection**: Advanced users can select from all available models; beginners are offered curated options for ease of use. Default models are assigned by user group with manual switching available
+- **RAG**: Embedding models and chunk sizes optimized for performance. Sources include SOPs, regulatory policy documents, and external medical research data
+- **Sensitive data handling**: A deliberate governance-first approach. All users complete training on confidential data handling before access; usage is monitored for compliance; access to shared knowledge and models is governed by operational process design that enforces least-privilege principles
+
+## Adoption & Enablement
+
+Astellas took a comprehensive approach to enablement, running a **two-month onboarding program for 2,000+ employees** that covered demonstrations, interactive workshops, and hands-on sessions. Organization-wide enablement was completed by the end of the rollout period.
+
+Training included:
+
+- Interactive sessions on **generative AI fundamentals**
+- **Open WebUI operations training** covering model creation and sharing
+- Ongoing **office hours** for advanced use and Q&A
+
+Over the following months:
+
+- **Weekly active users stabilized at 30–40%** over five months
+- Users organically created **hundreds of custom models**, sharing them across departments
+- **All departments** adopted the platform, including Research, Clinical Development, Medical, Sales, Marketing, Legal, Compliance, Pharmacovigilance, Administration, Communications, and Corporate Strategy
+
+
+> “Our efficiency in gathering external scientific information has improved dramatically. Being able to select and switch models depending on the use case makes our research far more effective.” - Research Department User, Astellas 
+
+## Results: Democratization, Productivity, and Satisfaction
+
+![Screenshot of Open WebUI showing the Astellas internal AI platform.](/images/enterprise/customers/astellas-pharma/open-webui.png)
+
+
+
+### 01. User-Driven Model Creation
+
+Employees created custom generative AI models tailored to their specific workflows, from research brief templates to regulatory document analysis, without waiting on IT. The platform now hosts **420+ user-built models**, a clear signal of organic, bottom-up adoption.
+
+### 02. Organic Growth & Adoption
+
+The platform grew to **3,200+ total users** organically, with an advanced user base exceeding **800**, demonstrating strong demand-driven adoption across the organization.
+
+### 03. Measurable Efficiency Gains
+
+**68% of users** reported significant efficacy gains in their daily work, with a **+43 NPS** indicating strong user satisfaction across departments.
+
+### 04. Research Acceleration
+
+R&D and research teams reported dramatic improvements in gathering and synthesizing scientific information, clinical trial summaries, and multilingual medical documents.
+
+
+> “For coding tasks, efficiency has increased more than ten-fold, I can’t imagine working without this tool now.” - Advanced User, Astellas
+
+## Top Use Cases
+
+- Drafting and reviewing scientific research briefs for R&D projects
+- Summarizing clinical trial reports
+- RAG over SOPs and regulatory policy documents
+- External information gathering on medical research data
+- Translation of multilingual medical documents
+- Generating code snippets for data analysis pipelines in research
+
+## Integrations
+
+- **Microsoft Outlook**: AI-assisted drafting and scheduling of responses
+- **Microsoft Teams**: Collaborative AI-powered chat for project discussions
+- **SharePoint**: Secure document ingestion and search within AI workflows
+- **Internal document management system**: Instant retrieval of corporate knowledge base
+
+
+## Why Astellas Chose Open WebUI
+
+- **Model freedom**: choose, switch, and update models without vendor lock-in
+- **Custom model creation**: employees build and share models tailored to their workflows
+- **Fine-grained permissions**: RBAC and group-based collaboration controls
+- **Self-hosted flexibility**: fully private deployment within Azure
+- **Deep integration**: connects to existing Microsoft ecosystem and internal systems 
+- **Scalable architecture**: grew from initial deployment to 3,200+ users organically
+
+---
+
+:::tip
+
+**Looking for an [Enterprise Plan](https://docs.openwebui.com/enterprise)?** — **[Speak with Our Sales Team Today!](https://docs.openwebui.com/enterprise)**
+
+Get **enhanced capabilities**, including **custom theming and branding**, **Service Level Agreement (SLA) support**, **Long-Term Support (LTS) versions**, and **more!**
+
+:::
