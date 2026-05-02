@@ -5,7 +5,7 @@ title: "Calendar"
 
 # 📅 Calendar
 
-**Schedule, track, and manage events — with AI that can plan for you.**
+**Schedule, track, and manage events, with AI that can plan for you.**
 
 Calendar is a built-in scheduling feature that gives every user a personal calendar. Create events, set recurring schedules, share calendars with teammates, and let AI models autonomously create and manage events through natural conversation.
 
@@ -19,21 +19,23 @@ Calendar is enabled by default but can be disabled by an administrator via the [
 
 ## Why Calendar?
 
+Calendar gives models a way to interact with time. Once it is enabled, you can ask a model to remind you about something, schedule a recurring task, or check what is coming up this week, and it just works.
+
 ### AI-powered scheduling
 
-With [native function calling](/features/extensibility/plugin/tools#tool-calling-modes-default-vs-native) enabled, models can search, create, update, and delete calendar events through natural language. Say *"Schedule a standup every weekday at 9am"* and the model handles it.
+With [native function calling](/features/extensibility/plugin/tools#tool-calling-modes-default-vs-native) enabled, models can search, create, update, and delete calendar events through natural language. Say *"Remind me to follow up with the design team at 3pm on Friday"* and the model creates an event with an alert. When the time arrives, you get a toast notification, a browser notification, and (optionally) a webhook, with no manual event creation on your part.
 
 ### Automation integration
 
-Active automations with RRULE schedules appear as virtual events on your **Scheduled Tasks** calendar. Past automation runs are shown as completed events with links to the generated chats.
+Active [Automations](/features/chat-conversations/chat-features/automations) appear as virtual events on a dedicated **Scheduled Tasks** calendar. Upcoming runs show when the next execution is scheduled, and past runs link directly to the chat they produced, giving you a unified timeline of both your events and your automated workflows.
 
 ### Shared calendars
 
-Share calendars with specific users or groups via access grants. Team members see shared events alongside their own.
+Share calendars with specific users or groups via access grants. Team members see shared events alongside their own, with RSVP tracking (pending, accepted, declined, tentative) built in.
 
 ### Multi-calendar organization
 
-Organize events across multiple calendars (e.g., "Personal", "Team Meetings") with color coding. Each user gets **Personal** and **Scheduled Tasks** calendars created automatically on first access.
+Organize events across multiple calendars (e.g., "Personal", "Team Meetings", "On-Call") with color coding. Each user gets **Personal** and **Scheduled Tasks** calendars created automatically on first access.
 
 ---
 
@@ -82,23 +84,23 @@ Open **User Menu > Calendar** from the sidebar. On first visit, two default cale
 Hold **Shift** in the User Menu to reveal pin/unpin buttons. Pinning Calendar adds a shortcut icon to the sidebar rail for one-click access.
 :::
 
-- **Personal** — your default calendar for manual events (blue, auto-created on first visit)
-- **Scheduled Tasks** — virtual read-only overlay of automation schedules and runs (purple, only visible when the user has [Automations](/features/chat-conversations/chat-features/automations) access)
+- **Personal**: your default calendar for manual events (blue, auto-created on first visit)
+- **Scheduled Tasks**: virtual read-only overlay of automation schedules and runs (purple, only visible when the user has [Automations](/features/chat-conversations/chat-features/automations) access)
 
 ### Create an Event
 
 1. Click **New Event** (sidebar or top bar) or click any day/hour cell on the calendar grid
 2. Fill in the event details:
    - **Title** (required)
-   - **Calendar** — which calendar to add the event to
-   - **When** — date and time, or toggle **All day**
+   - **Calendar**: which calendar to add the event to
+   - **When**: date and time, or toggle **All day**
    - **Location** (optional)
    - **Description** (optional)
 3. Click **Create**
 
 ### Edit or Delete an Event
 
-Click any event on the calendar to open the event editor. From there you can update details or delete the event. Automation-generated virtual events cannot be edited directly — clicking them navigates to the automation or the run's chat.
+Click any event on the calendar to open the event editor. From there you can update details or delete the event. Automation-generated virtual events cannot be edited directly; clicking them navigates to the automation or the run's chat.
 
 ---
 
@@ -118,7 +120,7 @@ Use the **arrow buttons** to navigate forward/backward, or click **Today** to ju
 
 ## Automation Integration
 
-The **Scheduled Tasks** calendar bridges the gap between automations and the calendar view. It is a **virtual calendar** — not stored in the database — that is synthesized at API response time whenever the user has access to the Automations feature.
+The **Scheduled Tasks** calendar bridges the gap between automations and the calendar view. It is a **virtual calendar**, not stored in the database, that is synthesized at API response time whenever the user has access to the Automations feature.
 
 ### Future runs
 
@@ -221,11 +223,11 @@ The default is **10 minutes before**.
 
 ### How alerts are delivered
 
-1. **Toast notification** — appears in the Open WebUI UI with the event title and time remaining. Clicking the toast navigates to the Calendar.
-2. **Browser notification** — if browser notifications are enabled in user settings, a native OS notification is shown.
-3. **Webhook** — if the user has a webhook URL configured in **Settings > Notifications**, a `calendar_alert` payload is sent.
+1. **Toast notification**: appears in the Open WebUI UI with the event title and time remaining. Clicking the toast navigates to the Calendar.
+2. **Browser notification**: if browser notifications are enabled in user settings, a native OS notification is shown.
+3. **Webhook**: if the user has a webhook URL configured in **Settings > Notifications**, a `calendar_alert` payload is sent.
 
-Alerts are de-duplicated server-side via `meta.alerted_at`, so each event fires at most once per start time — even across restarts and multi-instance deployments.
+Alerts are de-duplicated server-side via `meta.alerted_at`, so each event fires at most once per start time, even across restarts and multi-instance deployments.
 
 The global alert polling window is configurable via [`CALENDAR_ALERT_LOOKAHEAD_MINUTES`](/reference/env-configuration#calendar_alert_lookahead_minutes) (default: 10 minutes).
 
