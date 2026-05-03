@@ -31,14 +31,12 @@ title: "Tools & Functions (Plugins)"
 
 Getting started with Tools and Functions is easy because everything’s already built into the core system! You just **click a button** and **import these features directly from the community**, so there’s no coding or deep technical work required.
 
-:::tip Plugins can do *way* more than you think — and way more than is shown here
-The pages that follow document every capability the plugin system exposes: every class shape, every lifecycle method, every `__arg__`, every event type, every return contract, every hook that touches the pipeline. That surface is *complete*.
+:::tip The plugin system is more capable than these docs can show
+The pages that follow document the full plugin API surface: class shapes, lifecycle methods, arguments, event types, return contracts and every hook into the pipeline. The reference is complete.
 
-What's **not** documented — because it can't be — is **what to use it for**. The ideas. The creative combinations. The "huh, I didn't realize you could do that with just an inlet filter and a `saveState` bridge" moments. Those live in the community's heads, not in these docs.
+What these docs cannot cover is the range of things people actually build with it. Community plugins have been used for live-streaming HTML dashboards, per-user cost enforcement, context managers that summarize and replace older turns, bidirectional interactive UIs, in-chat MCP apps, forensic watermarking and much more.
 
-These are **developer docs**. The primitives are all here; the creativity is on you (and on the thousands of community plugins that have already stretched the system into shapes nobody on the core team predicted — live-streaming HTML dashboards, per-user cost enforcement, summarize-and-replace context managers, bidirectional interactive UIs, entire embedded design systems, in-chat MCP apps, forensic watermarking, and so on).
-
-If you're weighing a feature request and thinking *"this needs a core change,"* ask *"can this be a plugin?"* first. Almost always the answer is yes.
+If you are considering a feature request and thinking "this needs a core change," first ask whether it can be done as a plugin. The plugin system has access to the full request/response lifecycle, persistent state, user metadata, the event emitter and the admin-configurable valves system. In practice, most features that feel like they need core changes (custom authentication logic, per-user rate limiting, response post-processing, provider-specific routing, cost tracking, context management strategies) can be implemented entirely as a plugin without touching the core codebase. Filing a plugin on the community site also means other users benefit immediately, without waiting for a release cycle.
 :::
 
 ## What are "Tools" and "Functions"?
