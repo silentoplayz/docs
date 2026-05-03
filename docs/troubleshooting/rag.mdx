@@ -7,6 +7,75 @@ Retrieval-Augmented Generation (RAG) enables language models to reason over exte
 
 This page covers the most common RAG problems and their solutions.
 
+---
+
+## Recommended Settings by Scenario
+
+RAG performance depends heavily on your model setup. The defaults are conservative to work everywhere, but you will get much better results by tuning them to your specific deployment. All of these are configured in **Admin Panel > Settings > Documents**.
+
+### Local models with constrained context (≤ 8K tokens)
+
+Typical for Ollama models on consumer hardware (Llama 3.1 8B, Qwen 2.5 7B, Gemma 3 4B, Phi-3 Mini, etc.) where context windows are limited.
+
+| Setting | Value | Why |
+|---------|-------|-----|
+| **Text Splitter** | `token` | Consistent chunk sizes aligned to actual token counts |
+| **Markdown Header Splitting** | **On** | Preserves document structure |
+| **Chunk Size** | `1000` | Smaller chunks so each retrieval result fits comfortably |
+| **Chunk Overlap** | `100` | Standard overlap |
+| **Top K** | `3–5` | Fewer chunks to avoid blowing out your limited context budget |
+| **Full Context Mode** | Off | Cannot afford to send full documents |
+
+:::tip Context budget math
+With a chunk size of 1000 tokens and Top K of 5, RAG will inject roughly 5,000 tokens of retrieved content. Add your system prompt and conversation history — if your model has an 8K context window, that leaves about 2–3K tokens for the conversation itself. Adjust Top K downward if follow-up questions get cut off.
+:::
+
+### Cloud models with large context (32K+ tokens)
+
+Typical for OpenAI (GPT-4o, GPT-5), Anthropic (Claude), Google (Gemini), DeepSeek, and other API providers where context windows are 32K–1M+ tokens.
+
+| Setting | Value | Why |
+|---------|-------|-----|
+| **Text Splitter** | `token` | Consistent chunk sizes |
+| **Markdown Header Splitting** | **On** | Preserves document structure |
+| **Chunk Size** | `2000` | Larger chunks preserve more surrounding context per hit |
+| **Chunk Overlap** | `200` | More overlap prevents sentence splits |
+| **Top K** | `15–25` | Cast a wide net — you have the context budget for it |
+| **Full Context Mode** | Consider for small docs | If a document is under ~20K tokens, full context can outperform retrieval |
+
+:::tip When to use Full Context Mode
+If you are working with a single small-to-medium document (under ~50 pages) and a large-context model, Full Context Mode often gives better results than chunked retrieval because the model sees everything with no retrieval gaps. Toggle it per-chat in the chat settings.
+:::
+
+### Mixed environment (local + cloud)
+
+If you use both local and cloud models, configure for the lowest common denominator and override per-model or per-chat:
+
+| Setting | Value | Why |
+|---------|-------|-----|
+| **Text Splitter** | `token` | Works for both |
+| **Markdown Header Splitting** | **On** | Works for both |
+| **Chunk Size** | `1500` | Compromise — not too large for local, not too small for cloud |
+| **Chunk Overlap** | `200` | Safe default |
+| **Top K** | `10` | Moderate — a good middle ground for mixed model usage |
+
+---
+
+## Embedding Model Recommendations
+
+The embedding model determines retrieval quality. The right choice depends on your deployment:
+
+| Scenario | Recommended | Why |
+|----------|-------------|-----|
+| **Single user, getting started** | `all-MiniLM-L6-v2` (default) | Runs locally, no setup needed |
+| **Multi-user, Ollama available** | `nomic-embed-text` via Ollama | Offloads to Ollama, frees Open WebUI RAM |
+| **Production, API budget available** | `text-embedding-3-small` via OpenAI | Best retrieval quality per dollar |
+| **Air-gapped / self-hosted** | `nomic-embed-text` or `mxbai-embed-large` via Ollama | No external API calls needed |
+
+After changing your embedding model, **reindex all existing documents** in **Admin Panel > Settings > Documents** for the new embeddings to take effect.
+
+---
+
 ## Common RAG Issues and How to Fix Them
 
 ### 1. The Model "Can't See" Your Content
