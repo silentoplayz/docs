@@ -12,7 +12,7 @@ This site is built with [Docusaurus](https://docusaurus.io/) and includes:
 
 ## 📝 Contributing
 
-Contributions are welcome! Please read the [contributing guide](docs/tutorials/tips/contributing-tutorial.md) for details.
+Contributions are welcome! Please read the [contributing guide](docs/tutorials/contributing-tutorial.md) for details.
 
 ## 🌐 Live Docs
 
