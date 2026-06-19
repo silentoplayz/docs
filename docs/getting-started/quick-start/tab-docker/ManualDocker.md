@@ -1,104 +1,134 @@
-## Quick Start with Docker 🐳
+## Quick Start with Docker
 
-Follow these steps to install Open WebUI with Docker.
+:::info
+**WebSocket** support is required. Ensure your network configuration allows WebSocket connections.
+:::
 
-## Step 1: Pull the Open WebUI Image
+:::tip Docker Hub Now Available
+Open WebUI images are published to **both** registries:
+- **GitHub Container Registry:** `ghcr.io/open-webui/open-webui`
+- **Docker Hub:** `openwebui/open-webui`
 
-Start by pulling the latest Open WebUI Docker image from the GitHub Container Registry.
+Both contain identical images. Replace `ghcr.io/open-webui/open-webui` with `openwebui/open-webui` in any command below.
+:::
+
+### 1. Pull the image
 
 ```bash
 docker pull ghcr.io/open-webui/open-webui:main
 ```
 
-### Slim Image Variant
-
-For environments with limited storage or bandwidth, Open WebUI offers slim image variants that exclude pre-bundled models. These images are significantly smaller but download required models (whisper, embedding models) on first use.
-
-```bash
-docker pull ghcr.io/open-webui/open-webui:main-slim
-```
-
-### Specific release version
-
-You can also pull a specific Open WebUI release version directly by using a versioned image tag. This is recommended for production environments to ensure stable and reproducible deployments.
-
-```bash
-docker pull ghcr.io/open-webui/open-webui:v0.7.0
-```
-
-## Step 2: Run the Container
-
-Run the container with default settings. This command includes a volume mapping to ensure persistent data storage.
+### 2. Run the container
 
 ```bash
 docker run -d -p 3000:8080 -v open-webui:/app/backend/data --name open-webui ghcr.io/open-webui/open-webui:main
 ```
 
-To use the slim variant instead:
+| Flag | Purpose |
+|------|---------|
+| `-v open-webui:/app/backend/data` | Persistent storage. Prevents data loss between restarts. |
+| `-p 3000:8080` | Exposes the UI on port 3000 of your machine. |
+
+### 3. Open the UI
+
+Visit [http://localhost:3000](http://localhost:3000).
+
+---
+
+## Image Variants
+
+| Tag | Use case |
+|-----|----------|
+| `:main` | Standard image (recommended) |
+| `:main-slim` | Smaller image, downloads Whisper and embedding models on first use |
+| `:cuda` | Nvidia GPU support (add `--gpus all` to `docker run`) |
+| `:ollama` | Bundles Ollama inside the container for an all-in-one setup |
+
+### Specific release versions
+
+For production environments, pin a specific version instead of using floating tags:
 
 ```bash
-docker run -d -p 3000:8080 -v open-webui:/app/backend/data --name open-webui ghcr.io/open-webui/open-webui:main-slim
+docker pull ghcr.io/open-webui/open-webui:v0.9.6
+docker pull ghcr.io/open-webui/open-webui:v0.9.6-cuda
+docker pull ghcr.io/open-webui/open-webui:v0.9.6-ollama
 ```
 
-### Important Flags
+---
 
-- **Volume Mapping (`-v open-webui:/app/backend/data`)**: Ensures persistent storage of your data. This prevents data loss between container restarts.
-- **Port Mapping (`-p 3000:8080`)**: Exposes the WebUI on port 3000 of your local machine.
+## Common Configurations
 
-### Using GPU Support
-
-For Nvidia GPU support, add `--gpus all` to the `docker run` command:
+### GPU support (Nvidia)
 
 ```bash
 docker run -d -p 3000:8080 --gpus all -v open-webui:/app/backend/data --name open-webui ghcr.io/open-webui/open-webui:cuda
 ```
 
-#### Single-User Mode (Disabling Login)
+### Bundled with Ollama
 
-To bypass the login page for a single-user setup, set the `WEBUI_AUTH` environment variable to `False`:
+A single container with Open WebUI and Ollama together:
+
+**With GPU:**
+```bash
+docker run -d -p 3000:8080 --gpus=all -v ollama:/root/.ollama -v open-webui:/app/backend/data --name open-webui --restart always ghcr.io/open-webui/open-webui:ollama
+```
+
+**CPU only:**
+```bash
+docker run -d -p 3000:8080 -v ollama:/root/.ollama -v open-webui:/app/backend/data --name open-webui --restart always ghcr.io/open-webui/open-webui:ollama
+```
+
+### Connecting to Ollama on a different server
+
+```bash
+docker run -d -p 3000:8080 -e OLLAMA_BASE_URL=https://example.com -v open-webui:/app/backend/data --name open-webui --restart always ghcr.io/open-webui/open-webui:main
+```
+
+### Single-user mode (no login)
 
 ```bash
 docker run -d -p 3000:8080 -e WEBUI_AUTH=False -v open-webui:/app/backend/data --name open-webui ghcr.io/open-webui/open-webui:main
 ```
 
 :::warning
-
 You cannot switch between single-user mode and multi-account mode after this change.
-
 :::
 
-#### Advanced Configuration: Connecting to Ollama on a Different Server
+---
 
-To connect Open WebUI to an Ollama server located on another host, add the `OLLAMA_BASE_URL` environment variable:
+## Using the Dev Branch
+
+:::tip
+Testing dev builds is one of the most valuable ways to contribute. Run it on a test instance and report issues on [GitHub](https://github.com/open-webui/open-webui/issues).
+:::
+
+The `:dev` tag contains the latest features before they reach a stable release.
 
 ```bash
-docker run -d -p 3000:8080 -e OLLAMA_BASE_URL=https://example.com -v open-webui:/app/backend/data --name open-webui --restart always ghcr.io/open-webui/open-webui:main
+docker run -d -p 3000:8080 -v open-webui:/app/backend/data --name open-webui --restart always ghcr.io/open-webui/open-webui:dev
 ```
 
-## Access the WebUI
+:::warning
+**Never share your data volume between dev and production.** Dev builds may include database migrations that are not backward-compatible. Always use a separate volume (e.g., `-v open-webui-dev:/app/backend/data`).
+:::
 
-After the container is running, access Open WebUI at:
+If Docker is not your preference, follow the [Developing Open WebUI](/getting-started/advanced-topics/development).
 
-[http://localhost:3000](http://localhost:3000)
-
-For detailed help on each Docker flag, see [Docker's documentation](https://docs.docker.com/engine/reference/commandline/run/).
+---
 
 ## Uninstall
 
-To uninstall Open WebUI running with Docker, follow these steps:
-
-1.  **Stop and Remove the Container:**
+1. **Stop and remove the container:**
     ```bash
     docker rm -f open-webui
     ```
 
-2.  **Remove the Image (Optional):**
+2. **Remove the image (optional):**
     ```bash
     docker rmi ghcr.io/open-webui/open-webui:main
     ```
 
-3.  **Remove the Volume (Optional, WARNING: Deletes all data):**
-    If you want to completely remove your data (chats, settings, etc.):
+3. **Remove the volume (optional, deletes all data):**
     ```bash
     docker volume rm open-webui
     ```

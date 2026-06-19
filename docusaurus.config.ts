@@ -1,10 +1,24 @@
 import { Config } from "@docusaurus/types";
 import type * as Preset from "@docusaurus/preset-classic";
 
-import { themes as prismThemes } from "prism-react-renderer";
+import rehypeShiki, { type RehypeShikiOptions } from "@shikijs/rehype";
+import { type BundledLanguage, bundledLanguages } from "shiki";
+
+const shikiPlugin: [typeof rehypeShiki, RehypeShikiOptions] = [
+	rehypeShiki,
+	{
+		themes: {
+			light: "github-light",
+			dark: "github-dark",
+		},
+		defaultColor: false,
+		langs: Object.keys(bundledLanguages) as BundledLanguage[],
+	},
+];
 
 const config: Config = {
 	title: "Open WebUI",
+	titleDelimiter: "/",
 	tagline: "On a mission to build the best AI interface",
 	favicon: "images/favicon.png",
 
@@ -49,7 +63,8 @@ const config: Config = {
 					// Please change this to your repo.
 					// Remove this to remove the "edit this page" links.
 					editUrl: "https://github.com/open-webui/docs/blob/main",
-					exclude: ["**/tab-**/**"],
+					exclude: ["**/tab-**/**", "**/_template.*"],
+					beforeDefaultRehypePlugins: [shikiPlugin],
 				},
 				// blog: false,
 				blog: {
@@ -59,6 +74,7 @@ const config: Config = {
 					// Remove this to remove the "edit this page" links.
 					// editUrl:
 					// "https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/",
+					beforeDefaultRehypePlugins: [shikiPlugin],
 				},
 				theme: {
 					customCss: "./src/css/custom.css",
@@ -99,10 +115,6 @@ const config: Config = {
 			],
 		},
 		footer: {
-			logo: {
-				src: "images/logo-dark.png",
-				height: 100,
-			},
 			style: "light",
 			links: [
 				{
@@ -164,9 +176,14 @@ const config: Config = {
 			// copyright: `Copyright © ${new Date().getFullYear()} OpenWebUI`,
 		},
 		prism: {
-			theme: prismThemes.github,
-			darkTheme: prismThemes.dracula,
-			additionalLanguages: ["hcl", "docker"],
+			theme: {
+				plain: { color: "#333", backgroundColor: "#f3f3f3" },
+				styles: [],
+			},
+			darkTheme: {
+				plain: { color: "#ccc", backgroundColor: "#1a1a1a" },
+				styles: [],
+			},
 		},
 	} satisfies Preset.ThemeConfig,
 	plugins: [require.resolve("docusaurus-lunr-search")],

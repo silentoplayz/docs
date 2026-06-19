@@ -1,0 +1,91 @@
+---
+sidebar_position: 6
+title: "Functions"
+---
+
+## Overview
+
+**Pipe Functions** are Python plugins that appear as selectable models in your chat sidebar. Behind the scenes, they can do anything Python can do: integrate a proprietary AI provider, control your smart home with natural language, query a database, run a search engine, build a multi-step agent, generate charts, automate workflows, or serve as a calculator. No LLM is even required. If you can write the logic in Python, it becomes a "model" users can chat with.
+
+This guide walks you through importing and enabling your first Pipe Function, using the [Anthropic Pipe](https://openwebui.com/posts/60984ebf-cf4e-4822-98b8-0492463c2852) as an example.
+
+:::info Already have an OpenAI-compatible provider?
+If your provider supports the **OpenAI Chat Completions API protocol** (OpenAI, Google Gemini, Mistral, Groq, DeepSeek, and many more), you don't need a Function. Just [add a connection](/getting-started/quick-start/connect-a-provider/starting-with-openai-compatible). Anthropic also has native support via their OpenAI-compatible endpoint; see the [Anthropic guide](/getting-started/quick-start/connect-a-provider/starting-with-anthropic). Functions are for everything else: proprietary APIs, custom agents, or entirely novel interfaces.
+:::
+
+---
+
+## Step 1: Find a Function
+
+1. Go to the [Community Function Library](https://openwebui.com/search).
+2. Browse or search for the function you need. There are thousands of community-contributed functions for AI providers, search tools, home automation, productivity utilities, content filters, and more.
+3. Click **Get** on the function you want to import.
+
+:::note Community Account Required
+Importing directly from the community library requires a registered account at [openwebui.com](https://openwebui.com).
+:::
+
+---
+
+## Step 2: Import to Open WebUI
+
+A modal will appear:
+
+1. Enter your Open WebUI instance URL (e.g., `http://localhost:3000`).
+2. Click **Import to Open WebUI**.
+
+You'll be redirected to the **Function Editor** within your running instance.
+
+![Import Modal Screenshot](/images/getting-started/pipe-import-modal.png)
+
+---
+
+## Step 3: Review & Save
+
+Review the Python source code in the editor. Functions execute arbitrary code on your server, so only install from sources you trust.
+
+Click **Save** to add the function to your instance.
+
+![Function Editor Screenshot](/images/getting-started/pipe-function-editor.png)
+
+---
+
+## Step 4: Enable the Function
+
+New functions are disabled by default. Toggle the switch to enable it.
+
+![Enable Function Screenshot](/images/getting-started/pipe-enable.png)
+
+---
+
+## Step 5: Configure Valves
+
+Many functions require configuration, such as API keys or endpoint URLs:
+
+1. Click the ⚙️ **gear icon** next to the toggle switch.
+2. Enter the required values (e.g., your Anthropic API key).
+3. Save.
+
+![Valves Configuration Screenshot](/images/getting-started/pipe-valves.png)
+
+---
+
+## Step 6: Start Chatting
+
+The function now appears as a selectable model in the chat sidebar. Select it and start chatting.
+
+![Select Pipe Function as Model Screenshot](/images/getting-started/pipe-select-model.png)
+
+---
+
+:::danger ⚠️ Security Reminder
+Functions run arbitrary Python on your server. Always review code before enabling, and only import from trusted sources. For details, see the [Plugin Security Warning](/features/extensibility/plugin/).
+:::
+
+## Learn More
+
+- **[Functions Overview](/features/extensibility/plugin/functions/)**: Architecture, types, and the full range of possibilities.
+- **[Pipe Function Guide](/features/extensibility/plugin/functions/pipe)**: Build custom models, agents, and non-LLM interfaces.
+- **[Filter Function Guide](/features/extensibility/plugin/functions/filter)**: Intercept, translate, moderate, and log messages.
+- **[Action Function Guide](/features/extensibility/plugin/functions/action)**: Add interactive buttons for export, workflows, and more.
+- **[Community Library](https://openwebui.com/search)**: Browse thousands of community functions.

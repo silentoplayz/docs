@@ -3,99 +3,317 @@ sidebar_position: 4
 title: "Knowledge"
 ---
 
-Knowledge part of Open WebUI is like a memory bank that makes your interactions even more powerful and context-aware. Let's break down what "Knowledge" really means in Open WebUI, how it works, and why it's incredibly helpful for enhancing your experience.
+# 📚 Knowledge
 
-## TL;DR
+**Give your AI access to your documents and let it find what matters.**
 
-- **Knowledge** is a section in Open WebUI where you can store structured information that the system can refer to during your interactions.
-- It's like a memory system for Open WebUI that allows it to pull from saved data, making responses more personalized and contextually aware.
-- You can use Knowledge directly in your chats with Open WebUI to access the stored data whenever you need it.
+Knowledge is where you store the files and collections that your AI can search, read, and reason over. Upload PDFs, spreadsheets, code, or any text-based document. Build collections around projects, teams, or topics. When a model needs an answer, it pulls from your knowledge base instead of guessing.
 
-Setting up Knowledge is straightforward! Simply navigate to **Workspace → Knowledge** in the sidebar and start adding details or data. You don't need coding expertise or technical setup; it's built into the core system!
+Unlike [Notes](/features/notes), which inject full content into every message, Knowledge uses retrieval (RAG) to find the relevant chunks on demand. This makes it the right choice for large document sets where injecting everything would exceed the context window.
 
-## What is the "Knowledge" Section?
+---
 
-The **Knowledge section** is a storage area within Open WebUI where you can save specific pieces of information or data points. Think of it as a **reference library** that Open WebUI can use to make its responses more accurate and relevant to your needs.
+## Why Knowledge?
 
-### Why is Knowledge Useful?
+### Your documents become searchable by AI
 
-Imagine you're working on a long-term project and want the system to remember certain parameters, settings, or even key notes about the project without having to remind it every time. Or perhaps, you want it to remember specific personal preferences for chats and responses. The Knowledge section is where you can store this kind of **persistent information** so that Open WebUI can reference it in future conversations, creating a more **coherent, personalized experience**.
+Upload a folder of contracts, technical specs, or research papers. The AI searches them by meaning, not just keywords, and cites where it found the answer.
 
-Some examples of what you might store in Knowledge:
+### Two retrieval modes for different needs
 
-- Important project parameters or specific data points you'll frequently reference.
-- Custom commands, workflows, or settings you want to apply.
-- Personal preferences, guidelines, or rules that Open WebUI can follow in every chat.
+Choose **Focused Retrieval** (RAG) to let the AI search large collections efficiently, or **Full Context** to inject an entire document word-for-word when precision matters.
 
-### How to Use Knowledge in Chats
+### Autonomous exploration with native function calling
 
-Accessing stored Knowledge in your chats is easy! By simply referencing what's saved (using '#' before the name), Open WebUI can pull in data or follow specific guidelines that you've set up in the Knowledge section.
+With [native function calling](/features/extensibility/plugin/tools#tool-calling-modes-default-vs-native) enabled, models don't just search. They browse your knowledge bases, read files page by page, and synthesize across multiple documents without manual prompting.
 
-For example:
+### Scoped access keeps things organized
 
-- When discussing a project, Open WebUI can automatically recall your specified project details.
-- It can apply custom preferences to responses, like formality levels or preferred phrasing.
+Attach specific knowledge bases to a model so it only searches what's relevant. Or leave it unscoped and let the model discover everything the user has access to.
 
-To reference Knowledge in your chats, just ensure it's saved in the Knowledge section, and Open WebUI will know when and where to bring in the relevant information!
+---
 
-Admins can add knowledge to the workspace, which users can access and use; however, users do not have direct access to the workspace itself.
+## Key Features
 
-### Native Mode (Agentic Mode) Knowledge Tools
+| | |
+| :--- | :--- |
+| 📄 **9 vector databases** | ChromaDB and PGVector (officially maintained), plus community options: Qdrant, Milvus, OpenSearch, Elasticsearch, and more |
+| 🔍 **Hybrid search** | BM25 keyword search + vector search with cross-encoder reranking |
+| 📑 **5 extraction engines** | Tika, Docling, Azure, Mistral OCR, custom loaders |
+| 🤖 **Agentic retrieval** | Models browse, search, and read your documents autonomously |
+| 📄 **Full context mode** | Inject entire documents with no chunking |
+| 🗂️ **Nested directories** | Organize files into subdirectories with drag-and-drop reordering |
+| 🔄 **Incremental directory sync** | Mirror a local folder into the KB, only new and modified files upload, deletions are removed, folder structure preserved. Mirror remote sources too (Git, Confluence, S3 and more) with [oikb](/features/knowledge-base-sync) |
+| 📦 **Export and API** | Back up knowledge bases as zip files, manage via REST API |
 
-When using **Native Function Calling (Agentic Mode)**, quality models can interact with your Knowledge Bases autonomously using built-in tools:
+---
 
-:::tip Quality Models for Knowledge Exploration
-Autonomous knowledge base exploration works best with frontier models (GPT-5, Claude 4.5+, Gemini 3+) that can intelligently search, browse, and synthesize information from multiple documents. Small local models may struggle with multi-step knowledge retrieval.
+## Retrieval Modes
+
+When attaching files or knowledge bases to a model, click on the attached item to toggle between modes:
+
+### 🔍 Focused Retrieval (default)
+
+Uses RAG to find and inject the most relevant chunks based on the user's query. When hybrid search is enabled (`ENABLE_RAG_HYBRID_SEARCH`), retrieval combines BM25 keyword search with vector search, plus reranking for accuracy.
+
+Best for large document sets where only specific sections are relevant.
+
+### 📄 Full Context
+
+Injects the complete content of the file into every message. No chunking, no semantic search. Always injected regardless of native function calling settings, so the model doesn't need to call any tools to access it.
+
+Best for short reference documents, style guides, or context that's always relevant.
+
+---
+
+## Agentic Knowledge Tools
+
+With [native function calling](/features/extensibility/plugin/tools#tool-calling-modes-default-vs-native) enabled, models interact with your knowledge bases using built-in tools. Which tools appear depends on whether specific knowledge is attached to the model:
+
+| Tool | Attached KB | No KB attached | Description |
+|------|:-----------:|:--------------:|-------------|
+| `list_knowledge` | ✅ | ❌ | List attached KBs (with file counts), standalone files, and notes; pass `knowledge_id` (with `skip`/`count`, max 200) to page one KB's files |
+| `list_knowledge_bases` | ❌ | ✅ | Browse available knowledge bases with file counts |
+| `search_knowledge_bases` | ❌ | ✅ | Find knowledge bases by name or description |
+| `query_knowledge_bases` | ❌ | ✅ | Search KB names/descriptions by semantic similarity |
+| `search_knowledge_files` | ✅ (scoped) | ✅ (all) | Search files by filename |
+| `query_knowledge_files` | ✅ (scoped) | ✅ | Search file contents using the RAG pipeline |
+| `grep_knowledge_files` | ✅ (scoped) | ✅ | Exact text / regex search across knowledge files (returns matching lines with line numbers; auto-detects regex like `error|warn`) |
+| `view_file` | ✅ | ❌ | Read file content with pagination (`offset`/`max_chars`) or by line range (`start_line`/`end_line`, optional `line_numbers`) |
+| `view_knowledge_file` | ✅ | ✅ | Read file content from any accessible KB |
+| `view_note` | ✅ | ❌ | Read attached notes |
+
+The key split: `list_knowledge` and `list_knowledge_bases` are mutually exclusive. Attaching a KB scopes the model to only those documents. Leaving it unscoped lets the model discover everything the user has access to.
+
+#### When to prefer `grep_knowledge_files` over `query_knowledge_files`
+
+The two search tools complement each other:
+
+| | `query_knowledge_files` | `grep_knowledge_files` |
+|---|---|---|
+| **How it matches** | Semantic / vector retrieval (with optional BM25 + rerank when [`ENABLE_RAG_HYBRID_SEARCH`](/reference/env-configuration#enable_rag_hybrid_search) is on) | Exact string match — regex auto-detected (e.g. `error\|warn`, `version \d+`) |
+| **Returns** | Relevant chunks of content | Matching lines with file ID, filename, and 1-indexed line number |
+| **Use when** | "What does the documentation say about X?" — paraphrased questions, conceptual lookups | "Find every place we mention `OPENAI_API_KEY`" — literal identifiers, error strings, version numbers |
+| **Result cap** | Top K (default 5) | 50 matches |
+| **Flags** | — | `case_insensitive`, `count_only`, `file_id` (single-file mode) |
+
+In agentic flows, a typical pattern is: `query_knowledge_files` to locate the relevant document, then `grep_knowledge_files` to pinpoint exact lines, then `view_file` (line-range mode below) to read the surrounding context.
+
+#### Reading with `view_file`
+
+`view_file` supports two addressing modes:
+
+- **Character pagination** — `offset` + `max_chars` (default `10000`, hard cap `100000`). Best for streaming through a long document; the response includes `next_offset` when the file is truncated.
+- **Line range** — `start_line` + optional `end_line` (1-indexed, inclusive). Overrides `offset`/`max_chars` when set; pairs naturally with `grep_knowledge_files`' line numbers. Pass `line_numbers: true` to also get a `<n>: <line>` prefix on each returned line.
+
+The line-range response includes `total_lines`, `showing_lines`, and `next_start_line` for follow-up reads.
+
+### Filesystem-style access (`kb_exec`)
+
+When [`ENABLE_KB_EXEC=True`](/reference/env-configuration#enable_kb_exec) is set, Open WebUI exposes a `kb_exec` tool that gives the model a filesystem-style interface over knowledge bases.
+
+**Tools that go away**, because their function is now covered by `kb_exec` commands:
+
+- `list_knowledge` — replaced by `ls`
+- `search_knowledge_files` — replaced by `find "<glob>"`
+- `grep_knowledge_files` — replaced by `grep "<pattern>"`
+- `view_file` and `view_knowledge_file` — replaced by `cat`, `head`, `tail`, `sed -n '<a>,<b>p'`
+
+**Tools that stay injected alongside `kb_exec`**, because they do something `kb_exec` can't:
+
+- **`query_knowledge_files`** — semantic / RAG search (always)
+- **`view_note`** — when notes are attached to the model (`kb_exec` is file-only, so notes need a dedicated reader)
+- **`query_knowledge_bases`** and **`search_knowledge_bases`** — when no KB is attached to the model, so the model can still discover and search across knowledge bases by name/description
+
+It is **off by default** and still experimental, but for an enhanced agentic RAG experience we recommend enabling it (`ENABLE_KB_EXEC=True`) for capable models running native function calling. It targets frontier models that already "think in shell": they tend to chain `ls`, `grep` and `cat` more reliably than they orchestrate a fan-out of specialized tools. It only works with native function calling on; in Default Mode it has no effect.
+
+**Supported commands**
+
+| Command | Purpose |
+|---------|---------|
+| `ls`, `ls <dir>/`, `ls -a` | List the current level / a subdirectory / a flat view of every file with full paths |
+| `tree`, `tree <dir>/` | Recursive directory tree |
+| `cat -n <file>` | Read a file (optionally with line numbers) |
+| `head -N <file>` / `tail -N <file>` | First or last N lines |
+| `sed -n '<a>,<b>p' <file>` | Print lines `<a>` through `<b>` |
+| `grep "<pattern>" [<dir>/\|<file>\|*.ext]` | Exact / regex search; flags `-i` (case-insensitive), `-l` (filenames only), `-c` (counts) |
+| `find [<dir>/] "<glob>"` | Find files by glob |
+| `wc <file>` | Line / word / char counts |
+| `stat <file>` | File metadata |
+
+**Pipes**
+
+`kb_exec` parses a single pipeline, so commands compose:
+
+```text
+grep "auth" | head -5
+grep -l "TODO" docs/
+find docs/ "*.md" | head -10
+```
+
+**File references**
+
+Files can be addressed three ways — pick whichever is unambiguous:
+
+- **Path** — `docs/api/auth.md` (relative to the knowledge base root; resolves through the directory tree)
+- **Filename** — `auth.md` (errors with an "ambiguous filename" hint when the same name exists in multiple directories or KBs)
+- **File ID** — the UUID returned by `ls`, `find`, or `grep`
+
+**Behavior notes**
+
+- `kb_exec` respects the same access control as the other knowledge tools — files the user can't read are silently excluded from results.
+- The model still has `query_knowledge_files` for semantic search; reach for it when literal commands won't find a paraphrased concept.
+- Built on top of the directory model — `kb_exec` is the only tool that fully reflects the directory structure created in the UI.
+
+Autonomous exploration works best with frontier models that can intelligently chain search, browse, and synthesize. Smaller models may struggle with multi-step retrieval. Administrators can disable the **Knowledge Base** tool category per-model in **Workspace > Models > Edit > Builtin Tools**.
+
+#### Guiding tool choice across mixed knowledge bases
+
+With `kb_exec` enabled, the model picks between two complementary tools, and the simplest way to make it reach for the right one per knowledge base is a short **system prompt** that names the bases and the tool to favour:
+
+- **Prose and PDFs** suit `query_knowledge_files` (semantic search). It matches on meaning, so it handles paraphrased questions over documents well and does not depend on clean text extraction.
+- **Text files, code, configs and logs** suit `kb_exec` (`ls`, `tree`, `grep`, `cat`, read-by-line). The model can walk the tree and pull exact lines, which beats semantic search for literal identifiers, error strings and structure.
+
+A prompt that spells this out per base biases the model correctly while still letting it decide each call:
+
+> Two knowledge bases are attached. **Handbook** is PDF documentation: use `query_knowledge_files` for questions about it. **Codebase** is source files: use `kb_exec` (`grep`, `cat`, `ls`) to find and read exact code. In general, prefer `kb_exec` for exact strings, identifiers and file structure, and `query_knowledge_files` for conceptual questions.
+
+Without `kb_exec`, the same split applies between [`grep_knowledge_files` and `query_knowledge_files`](#when-to-prefer-grep_knowledge_files-over-query_knowledge_files).
+
+For the full list of built-in agentic tools, see the [Native/Agentic Mode Tools Guide](/features/extensibility/plugin/tools#built-in-system-tools-nativeagentic-mode).
+
+:::warning Knowledge is NOT auto-injected with native function calling
+
+When native function calling is enabled, attached knowledge is **not automatically injected**. The model must call the knowledge tools to search and retrieve. If your model isn't using attached knowledge:
+
+1. **Add system prompt instructions** telling the model to use `list_knowledge` and `query_knowledge_files`.
+2. **Disable native function calling** for that model to restore automatic RAG injection.
+3. **Switch to Full Context mode** for the attachment to bypass RAG entirely.
 :::
 
-- **`query_knowledge_bases`**: Search across knowledge bases using semantic/vector search. This should be the model's first choice for finding information before searching the web.
-- **`list_knowledge_bases`**: Browse available knowledge bases with file counts.
-- **`search_knowledge_bases`**: Find specific knowledge bases by name or description.
-- **`search_knowledge_files`**: Locate files within knowledge bases by filename.
-- **`view_knowledge_file`**: Read the full content of a specific file from a knowledge base.
+---
 
-These tools enable models to autonomously explore and retrieve information from your knowledge bases, making conversations more contextually aware and grounded in your stored documents.
+## Setting Up a Knowledge Base
 
-:::info Central Tool Documentation
-For complete details on all built-in agentic tools and how to configure them, see the [**Native/Agentic Mode Tools Guide**](/features/plugin/tools#built-in-system-tools-nativeagentic-mode).
+1. Click **Workspace** in the sidebar, then select **Knowledge**.
+2. Click **+ New Knowledge** and give it a name and description.
+3. Upload files or add existing documents.
+4. Attach the knowledge base to a model in **Workspace > Models > Edit**, or reference it in chat with `#`.
+
+### Organizing into directories
+
+Knowledge bases support nested **directories** so larger document sets stay navigable. Create them from the **Add Content** menu (**+ New Directory**), then reorganize freely.
+
+**Creating and navigating**
+
+- **+ New Directory** lives next to file upload in the **Add Content** menu. Name uniqueness is enforced per parent — two siblings can't share a name, but you can reuse names in different parents.
+- Click a directory to descend into it; the **breadcrumb trail** at the top of the view always reflects the current path and lets you jump back to any ancestor in one click.
+- Directories can be **renamed** or **moved to a different parent** without affecting the files inside them.
+
+**Drag-and-drop**
+
+You can move items by dragging:
+
+- **Files** onto a directory row, into the empty area of an open directory, or onto any breadcrumb crumb (including the root crumb to send a file back to the top level).
+- **Directories** onto another directory to nest them, or onto a breadcrumb crumb to move them up the tree. Moving a directory into itself or one of its descendants is blocked server-side.
+
+**Deletion semantics**
+
+Deleting a non-empty directory prompts for the action to take with its contents:
+
+- **Move files to parent** (default) — the directory is removed but its files and subdirectories are re-parented one level up.
+- **Delete everything** — the directory and all files/subdirectories underneath it are permanently removed.
+
+**Effect on retrieval and tools**
+
+- **Retrieval and standard RAG** still span the entire knowledge base. Directories don't shard the vector index; chunks from any subdirectory remain reachable in a single search.
+- **Agentic tools** are directory-aware:
+  - `kb_exec` (when enabled) treats subdirectories like a filesystem: `ls docs/`, `tree`, `grep "x" docs/`, and path-style refs (`docs/api/auth.md`) all work — see [Filesystem-Style Access (`kb_exec`)](#filesystem-style-access-kb_exec) below.
+  - The other knowledge tools (`query_knowledge_files`, `grep_knowledge_files`, `search_knowledge_files`) ignore directory boundaries and return matches from the whole KB.
+
+### Renaming files
+
+Individual files can be renamed in place from the workspace via the file's item menu — no need to re-upload. The new name is reflected everywhere the file is referenced (knowledge listings, agentic tool output, citations).
+
+### Syncing a local directory
+
+The **Add Content → Sync Directory** action mirrors a local folder into the knowledge base **incrementally**: the client hashes each local file (SHA-256), the server compares hashes and paths against what is already stored, and only **new**, **modified**, and **deleted** files are touched. Unmodified files (the typical majority) are left alone — no re-upload, no re-embedding. The local folder's subdirectory structure is mirrored in the KB; missing subdirectories are created, and subdirectories that no longer exist locally are removed.
+
+:::tip Syncing a lot of files? Use oikb instead
+The in-app **Sync Directory** runs in your browser: it enumerates, hashes and uploads every file client-side. That is fine for a modest folder, but on a **large** set (thousands of files or a multi-gigabyte vault) it gets slow and gives little progress feedback, often sitting for a long time before it even reports the file count. For large or frequently-changing libraries we **strongly recommend** the official [**Knowledge Base Sync (oikb)**](/features/knowledge-base-sync) tool instead: it runs natively with progress bars, parallel uploads and retries, built for exactly this. Point it at the top of your folder and it syncs the entire tree (every subdirectory, recursively) into one Knowledge Base.
 :::
 
-### Setting Up Your Knowledge Base
+Behavior to be aware of:
 
-1. **Navigate to the Knowledge Section**: Click **Workspace** in the sidebar, then select **Knowledge**. This area is designed to be user-friendly and intuitive.
-2. **Add Entries**: Input information you want Open WebUI to remember. It can be as specific or broad as you like.
-3. **Save and Apply**: Once saved, the Knowledge is accessible and ready to enhance your chat interactions.
+- Hidden files and folders (anything beginning with `.`) are skipped.
+- Files modified locally upload with a new content hash; the old file entry is removed from the KB and replaced.
+- Files removed locally are deleted from the KB during the cleanup step.
+- The action is **non-destructive** for unchanged files. Earlier versions of the same menu action used to wipe and re-upload everything — that is no longer the case as of v0.9.6.
 
-### Exporting a Knowledge Base
+For programmatic use, the same workflow is exposed as two endpoints under [API access](#api-access) below.
 
-Admins can export an entire knowledge base as a downloadable zip file. This is useful for backing up your knowledge, migrating data between instances, or sharing curated knowledge collections with others.
-
-To export a knowledge base, open the item menu (three dots) on any knowledge base entry and select **Export**. The system will generate a zip archive containing all files from that knowledge base, converted to `.txt` format for universal compatibility. The zip file will be named after the knowledge base itself.
-
-:::note Admin Only
-The export feature is restricted to admin users. Regular users will not see the Export option in the menu.
+:::tip Sync remote sources, or on a schedule
+The in-app **Sync Directory** action handles a local folder on your machine. To mirror a **remote** source instead (a GitHub repo, a Confluence space, an S3 bucket and [dozens more](/features/knowledge-base-sync#sources-and-connectors)), or to keep a Knowledge Base current **automatically** on a schedule or on every push, use the official [**Knowledge Base Sync (oikb)**](/features/knowledge-base-sync) companion tool. It drives these same endpoints for you.
 :::
 
-### Programmatic Access via API
+### Exporting
 
-Knowledge bases can also be managed programmatically through the Open WebUI API. This is useful for automated workflows, bulk imports, or integrating with external systems.
+Admins can export an entire knowledge base as a zip file via the item menu (three dots) > **Export**. Files are converted to `.txt` for universal compatibility. Regular users will not see the Export option.
 
-Key API endpoints:
-- `POST /api/v1/files/` - Upload files
-- `GET /api/v1/files/{id}/process/status` - Check file processing status
-- `POST /api/v1/knowledge/{id}/file/add` - Add files to a knowledge base
+### API access
 
-:::warning Important: Async File Processing
-When uploading files via API, processing happens asynchronously. You **must** wait for file processing to complete before adding files to a knowledge base, or you will receive an "empty content" error.
+Knowledge bases can be managed programmatically:
 
-For detailed examples and proper workflow handling, see the [API Endpoints documentation](/getting-started/api-endpoints#retrieval-augmented-generation-rag).
-:::
+**Files**
 
-## Summary
+- `POST /api/v1/files/` — Upload files. Pass `knowledge_id` (and optionally `directory_id`) in the upload metadata to have the backend **auto-link and process the file into that knowledge base server-side** — equivalent to a follow-up `POST /api/v1/knowledge/{id}/file/add`, but it does not depend on the client staying connected after upload. This is the recommended single-call path (added in v0.9.6, fixing files left unlinked when the uploader disconnected mid-processing). The server SHA-256-hashes the uploaded bytes into `file.meta.file_hash`; clients can pre-compute and send `file_hash` in metadata to skip server-side hashing (used by the incremental sync flow below).
+- `GET /api/v1/files/{id}/process/status` — Check processing status
+- `POST /api/v1/files/{id}/rename` — Rename a file
+- `POST /api/v1/knowledge/{id}/file/add` — Add files to a knowledge base
+- `POST /api/v1/knowledge/{id}/file/move` — Move a file between directories within the same KB (body: `file_id`, `directory_id` — `null` moves to the KB root)
 
-- The Knowledge section is like Open WebUI's "memory bank," where you can store data that you want it to remember and use.
-- **Use Knowledge to keep the system aware** of important details, ensuring a personalized chat experience.
-- You can **directly reference Knowledge in chats** to bring in stored data whenever you need it using '#' + name of the knowlege.
-- **Admins can export knowledge bases** as zip files for backup, migration, or sharing purposes.
+**Directories**
 
-🌟 Remember, there's always more to discover, so dive in and make Open WebUI truly your own!
+- `POST /api/v1/knowledge/{id}/dirs/create` — Create a directory (body: `name`, optional `parent_id`)
+- `POST /api/v1/knowledge/{id}/dirs/{dir_id}/update` — Rename or re-parent a directory (body: `name` and/or `parent_id`)
+- `DELETE /api/v1/knowledge/{id}/dirs/{dir_id}/delete?move_files=true` — Delete a directory. With `move_files=true` (default), contained files are re-parented; with `move_files=false`, they're deleted along with the directory.
+
+**Incremental directory sync** (added in v0.9.6)
+
+- `POST /api/v1/knowledge/{id}/sync/diff` — Submit a local manifest (`manifest: [{path, filename, checksum}]` where `checksum` is the SHA-256 of the file bytes) and receive `{added, modified, deleted, mkdir, rmdir, unmodified_count}` describing exactly what to upload, replace, delete, and which directories to create/remove. Read-only — does not mutate the KB.
+- After acting on the diff (create `mkdir` paths, upload `added` + `modified` files with their hashes via `POST /api/v1/files/`), call:
+- `POST /api/v1/knowledge/{id}/sync/cleanup` — Body: `{file_ids: [...], dir_ids: [...]}`. Removes the stale files (from the KB, vector store, and per-file collections) and the now-empty directories returned by `sync/diff`. Run this last so deletions don't outrun uploads.
+
+File processing happens asynchronously. You must poll the status endpoint until processing completes before adding files to a knowledge base, or you'll get an "empty content" error. See [API Endpoints](/reference/api-endpoints#-retrieval-augmented-generation-rag) for workflow examples.
+
+---
+
+## Use Cases
+
+### Project documentation
+
+Upload your team's technical specs, architecture docs, and runbooks into a knowledge base. Attach it to a "Project Assistant" model. The AI answers questions grounded in your actual documentation instead of generic training data.
+
+### Legal and compliance review
+
+Load contracts, policies, and regulatory documents. Ask the AI to find specific clauses, compare terms across agreements, or flag inconsistencies.
+
+### Research synthesis
+
+Add dozens of papers to a knowledge base. The AI searches across all of them to answer questions, find supporting evidence, or identify contradictions between studies.
+
+---
+
+## Limitations
+
+### Context window with Full Context mode
+
+"Using Entire Document" injects the full text. A large document attached to a model with a small context window will crowd out conversation history.
+
+### Processing delay for API uploads
+
+Files uploaded via API are processed asynchronously. Attempting to use a file before processing completes will fail silently or return empty results. Note that uploading with a `knowledge_id` (above) makes linking server-side and robust to client disconnects, but it does **not** make the content instantly queryable — extraction/embedding still runs in the background, so poll `GET /api/v1/files/{id}/process/status` before relying on retrieval.
+
+### Native function calling changes behavior
+
+Enabling native function calling changes how knowledge bases work. If your KB suddenly stops producing results, check whether `function_calling: native` was set in global model defaults. See [Knowledge Base troubleshooting](/troubleshooting/rag#13-knowledge-base-attached-to-model-not-working) for details.

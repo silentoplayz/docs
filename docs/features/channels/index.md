@@ -3,203 +3,156 @@ sidebar_position: 1000
 title: "Channels"
 ---
 
-**Channels** transform Open WebUI from a personal interface into a collaborative workspace. Unlike standard "Chats"—which are isolated sessions—Channels are persistent, topic-based rooms (similar to Discord or Slack), allowing multiple users and multiple AI models to interact in a shared timeline.
+# 💬 Channels
 
-:::info Beta Feature
-Channels is currently a **Beta** feature. Functionality is subject to change, and it must be explicitly enabled by an Administrator before it appears in the interface.
-:::
+**Where your team and AI think together, in real time.**
+
+Channels are persistent, shared spaces where humans and AI models participate in the same conversation. Unlike standard chats, which are personal and isolated, Channels let multiple users and multiple models interact in a single timeline. Every exchange, whether human or AI, becomes shared context that the whole team can build on.
+
+Open WebUI is where knowledge is found, created, and shared. Channels make that collaborative.
+
+---
+
+## Why Channels?
+
+### AI as a participant, not a separate tool
+
+Tag `@gpt-4o` to draft a plan, then tag `@claude` to critique it. Your whole team sees both responses in the same timeline with full context. No tab-switching, no copy-pasting between tools.
+
+### Persistent shared context
+
+Every message becomes part of the record. When someone asks a question next week, the AI can draw on everything discussed before. Channels are living knowledge bases, not disposable threads.
+
+### Multiple models, one conversation
+
+Use one model for code review, another for writing, a third for data analysis, all in the same channel. Chain them together for richer answers than any single model could produce.
+
+### Real-time collaboration
+
+Instant updates, emoji reactions, threaded replies, pinned messages, and unread indicators.
+
+---
+
+## Key Features
+
+| | |
+| :--- | :--- |
+| 🤖 **`@model` tagging** | Summon any AI model into the conversation on demand |
+| 👥 **Shared context** | Every message, human or AI, builds the collective knowledge |
+| 🧵 **Threads & reactions** | Keep discussions organized with replies, pins, and emoji reactions |
+| 📎 **File sharing** | Drop images, documents, and code. AI can see and process them |
+| 🔒 **Access control** | Public, private, group-based, and direct message channels |
+| 🧠 **AI channel awareness** | Models can search and synthesize across channels autonomously |
+
+---
 
 ## Channel Types
 
-Open WebUI supports three types of channels:
-
-| Type | Description |
-|------|-------------|
-| **Standard** | Traditional topic-based channels with public or private visibility |
-| **Group** | Membership-based channels where users explicitly join as members |
-| **Direct Message** | Private one-on-one or multi-user conversations |
-
-### Group Channels
-
-Group channels are collaboration spaces where:
-- Users explicitly join as members rather than accessing through permissions
-- Support public or private visibility
-- Can automatically include members from specified user groups
-- Channel managers can add or remove members through the channel info modal
-
-### Direct Message Channels
-
-Direct Message (DM) channels enable private conversations:
-- One-on-one or multi-user private messaging
-- Automatic deduplication for existing conversations
-- Optional channel naming
-- Display participant avatars instead of channel icons
-- Can be hidden from sidebar while preserving message history
-- Automatically reappear when new messages arrive
-- Show online/offline status indicator for participants (Can be disabled via **Admin Panel > Settings > General > User Status**)
-
-## Enabling Channels
-
-By default, the Channels feature may be hidden. An **Admin** must enable it globally for the instance.
-
-1. Click on your **User Profile** icon in the bottom left (or top right) corner.
-2. Select **Admin Panel**.
-3. Navigate to **Settings** -> **General**.
-4. Locate the toggle labeled **Channels (Beta)**.
-5. Toggle it **On** and click **Save**.
-6. Refresh the page. The "Channels" section should now appear in the main sidebar.
-
-## Creating a Channel
-
-:::note
-Channel creation is restricted to administrators only by default.
-:::
-
-1. Locate the **Channels** header in the sidebar.
-2. Click the **(+) Plus** icon next to the "Channels" header.
-3. **Select Channel Type:** Choose Standard, Group, or Direct Message.
-4. **Name:** Enter a channel name (e.g., `general`, `python-dev`). Spaces are converted to hyphens.
-5. **Access Control:**
-   * **Public:** All registered users can see and join this channel.
-   * **Private/Group Access:** Only you or users with permission can access.
-   * For Group channels, select which user groups to auto-include.
-   * For DM channels, use the user selection interface to choose participants.
-
-## Using Channels
-
-To access a channel, click on an existing channel to join, or create a new one.
-
-### The `@mention` System
-
-Channels function differently than standard Chats. In a standard Chat, you select a model at the top, and it responds to every message. **In Channels, the conversation is passive by default.**
-
-To trigger a response, you must **tag** a specific model using the `@` symbol.
-
-1. Type `@` in the input box.
-2. A popup list of your available models will appear.
-3. Select the model you wish to speak to (e.g., `@llama3`, `@gpt-4o`).
-4. Type your prompt.
-
-**Example:**
-> **User:** `@gpt-4o` Write a Python script to scrape a website.
->
-> *(GPT-4o responds with code)*
->
-> **User:** `@llama3` Can you explain the code that GPT-4 just wrote?
-
-:::tip Multi-Model Workflows
-This allows you to chain different models together in one timeline. You can use a "smart" model for reasoning and a "fast" model for formatting, all within the same context window.
-:::
-
-### Tagging Users
-
-You can also use the `@` symbol to ping other human users in the channel to get their attention or direct a message to them specifically.
-
-1. Type `@` in the input box.
-2. Select the user's name from the list.
-3. **Usage:** `@admin Can you check the server logs?`
-
-### Linking Channels
-
-You can reference other channels directly within a conversation using the `#` symbol. This creates a clickable link to that channel.
-
-1. Type `#` in the input box.
-2. Select the channel name from the list.
-3. **Usage:** `Please post those screenshots in #screenshots instead.`
-
-:::warning Access Control
-If a user **does not** have access to view a linked channel (e.g., `#admin-only`) within a channel they **do** have access to (e.g., `#general-chat`), the linked channel will appear to them as **`#Unknown`**, and clicking it will have no effect.
-:::
-
-### Message Interactions
-
-Hover over any message in the timeline to access interaction options:
-
-* **Add Reaction:** Click the **Smiley Face** icon to add an emoji reaction. Hovering over reactions shows the names of users who reacted (up to 3 names plus a count for additional reactors).
-* **Pin Message:** Pin important messages for easy reference. Pinned messages are highlighted and accessible via a dedicated modal in the navbar.
-* **Reply:** Quotes the message within the main channel stream.
-* **Reply in Thread:** Starts a separate, nested conversation thread.
-* **Edit:** Click the **Pencil** icon to modify your message.
-* **Delete:** Click the **Trash** icon to remove the message.
-
-:::note
-Currently, reactions are purely visual and do not influence model behavior.
-:::
-
-### File Attachments
-
-Channels support file sharing:
-
-* **Paste from clipboard:** Images and files can be pasted directly using Ctrl+V / Cmd+V
-* **Drag and drop:** Drag files directly into the message input
-* **Image processing:** AI models in channels can view and analyze shared images
-
-### Collaboration
-
-If your Open WebUI instance supports multiple users:
-
-* **Real-time updates:** Messages appear instantly using optimistic UI rendering.
-* **Shared Context:** AI responses become part of the context for subsequent queries.
-* **Unread indicators:** Visual badges show unread message counts in the sidebar.
-* **User list:** Click to view all users with access to the channel.
-
-## Managing Channels
-
-### Editing and Deleting
-
-To manage an existing channel:
-
-1. Hover over the channel name in the sidebar.
-2. Click the **Gear (Edit)** icon.
-
-:::info
-Channel creators can edit and delete their own group and DM channels without administrator privileges. Standard channels require admin access.
-:::
-
-### Permissions
-
-Channels support granular access control:
-
-* **Write access:** Required for posting, editing, and deleting messages
-* **Read-only access:** Users can view content but cannot contribute
-* **Feature toggle:** Administrators can control channel access via `USER_PERMISSIONS_FEATURES_CHANNELS` environment variable or group permissions in the admin panel
+| Type | Best for |
+|------|----------|
+| **Standard** | Topic-based rooms (`#engineering`, `#marketing-strategy`), public or private |
+| **Group** | Team-scoped spaces with explicit membership and user-group sync |
+| **Direct Message** | Private 1:1 or small-group conversations with online/offline status |
 
 ---
 
-## Native Channel Awareness (Agentic)
+## How It Works
 
-When using a model with **Native Function Calling** enabled (see the [**Central Tool Calling Guide**](/features/plugin/tools#tool-calling-modes-default-vs-native)), models can navigate and search through your organization's channels autonomously.
+### Talking to AI
 
-### Available Channel Tools:
-- **`search_channels`**: The model can find channels by name or description to identify where relevant discussions might be happening.
-- **`search_channel_messages`**: The model can search for specific keywords or topics across all channels it has access to.
-- **`view_channel_message`**: The model can read specific individual messages and their metadata.
-- **`view_channel_thread`**: The model can retrieve an entire conversation thread to understand the full context of a discussion.
+Channels are **passive by default**. AI doesn't jump into every conversation. When you need input from a model, just tag it:
 
-### Why use native tool calling for Channels?
-This removes the need for human users to manually bridge information between private chats and public channels. You can ask an AI: *"Check the #dev-team channel and summarize the latest updates on the deployment issue,"* or *"What was decided in the #marketing-strategy thread about the logo?"*
+> **You:** `@gpt-4o` Here's our Q3 revenue data. What trends stand out?
+>
+> *(GPT-4o analyzes the data and responds with key insights)*
+>
+> **You:** `@claude` Do you agree with that analysis? What's missing?
 
-The model will use its "Agentic" loop to find the channel, search for relevant messages, read the full thread, and provide you with a synthesized answer—all without you leaving your current chat.
+This means your team can discuss freely without AI interrupting, and call on exactly the right model when it's needed.
+
+### Full chat-completion pipeline
+
+Mentioning a model in a channel runs through the same chat-completion pipeline as a standard chat. The reply is **streamed in real time** as the model generates it, and the model has access to the full set of capabilities its configuration grants:
+
+| Capability | What it enables in a channel |
+|------------|------------------------------|
+| **Native and default function calling** | Tool calls resolve and execute mid-message |
+| **Built-in tools** | Web search, image generation, code interpreter, calendar |
+| **User tools and MCP tools** | Whatever the model is configured to call, it can call |
+| **Filters** | Inlet/outlet/stream filters apply just like in chats |
+| **Knowledge (RAG)** | Knowledge bases attached to the model are queried and injected |
+| **Attached documents** | Images **and** non-image files (PDF, DOCX, etc.) uploaded in the thread are forwarded into the model's context |
+
+In other words, a channel-summoned model is a fully-equipped agent — not a one-shot completion.
+
+:::note Document attachments in channels (v0.9.6+)
+Before v0.9.6, tagging a model in a channel only forwarded **images** from the thread — uploaded PDFs, DOCX, and other non-image documents were ignored, so summarization and document-comparison prompts silently had nothing to work with. As of v0.9.6 these files are forwarded the same way they are in a direct chat, so document workflows behave identically in channels.
+:::
+
+### Tagging people and linking channels
+
+Use `@username` to notify teammates. Use `#channel-name` to create clickable cross-references between conversations.
+
+### Message interactions
+
+Hover any message to react with emoji, pin it for reference, reply inline, or start a threaded side conversation.
+
+---
+
+## AI Channel Awareness
+
+With [**native function calling**](/features/extensibility/plugin/tools#tool-calling-modes-default-vs-native) enabled, models can navigate your channels autonomously:
+
+- **Search channels** by name or description
+- **Search messages** across all accessible channels
+- **Read threads** to understand full discussion context
+
+> **You:** What was decided in `#dev-team` about the migration timeline?
+>
+> *(The AI searches the channel, reads the relevant thread, and gives you a synthesized answer, all without you leaving your current chat.)*
+
+This removes the need to manually bridge information between private chats and shared channels. The AI does it for you.
+
+:::tip Community action: Forward to Channel
+If you want a one-click path from a chat message into a channel, the community **[Forward to Channel](https://openwebui.com/posts/b60c1f03-e29c-47c0-862c-3741a382616e)** action adds a button to each assistant message that posts the reply (or a selection) into a channel of your choice. Useful for promoting good answers from private chats into team-visible spaces without copy-paste.
+:::
+
+---
+
+## Getting Started
+
+:::info Beta Feature
+Channels is currently in **Beta** and must be enabled by an administrator.
+:::
+
+1. Navigate to **Admin Panel > Settings > General**
+2. Toggle **Channels (Beta)** on and save
+3. Channels appear in the sidebar. Click **(+)** to create your first one
+
+Channel creation is restricted to administrators by default. Channels support granular permissions including read-only access, write access, and feature-level toggles via environment variables or group permissions.
+
+---
 
 ## Use Cases
 
-### 1. Team Development (`#dev-team`)
+### Team knowledge hub (`#engineering`)
 
-Create a channel where developers can paste code snippets. Use `@codellama` or `@deepseek-coder` to generate solutions, while human team members comment on the logic in plain text alongside the AI.
+Your team discusses architecture decisions throughout the week. Someone tags `@claude` to evaluate tradeoffs. The AI's analysis becomes part of the permanent record: searchable, referenceable, and available to every future conversation in that channel.
 
-### 2. Roleplay & Creative Writing (`#story-mode`)
+### Multi-model war room (`#incident-response`)
 
-Keep long-running story contexts alive indefinitely without them getting buried in your personal chat history. Switch between different "Character" models (using Modelfiles) within the same story thread to create multi-character dialogues.
+Paste logs and error traces. Tag `@gpt-4o` to analyze the stack trace. Tag `@deepseek-coder` to suggest a fix. Tag `@claude` to draft the postmortem. Three models, one shared context, one timeline.
 
-### 3. Project Knowledge Base (`#marketing-strategy`)
+### Project strategy (`#product-launch`)
 
-Use a channel as a persistent "War Room" for a specific project. Humans can discuss ideas and paste links freely. When a decision is needed, tag an AI to process the conversation history.
+Twenty messages of human brainstorming. Then: `@gpt-4o` Read the conversation above and create a prioritized action plan with owners and deadlines. The AI synthesizes everything discussed into a structured deliverable.
 
-* *Example:* "Users discuss a marketing plan for 20 messages. Then, a user types: `@gpt-4o` Read the conversation above and create a bulleted list of the action items we just discussed."
+### Creative collaboration (`#story-mode`)
+
+Long-running narrative projects where multiple "character" models interact in the same timeline. Switch between personas without losing context.
 
 ---
 
-:::warning
-**Privacy Note**
-Remember that **Public Channels** are visible to everyone on your instance. Do not share API keys, passwords, or sensitive personal data in public channels.
+:::warning Privacy
+Public channels are visible to all users on your instance. Do not share API keys, passwords, or sensitive data in public channels.
 :::

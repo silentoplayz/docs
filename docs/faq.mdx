@@ -3,9 +3,26 @@ sidebar_position: 1200
 title: "❓ FAQ"
 ---
 
-import { TopBanners } from "@site/src/components/TopBanners";
 
-<TopBanners />
+### Q: How can I get support or ask for help?
+
+**A:** Community support for Open WebUI is provided by **volunteers** who generously contribute their time and expertise. Because of this, responses are best-effort and may not always be immediate or personalized. For organizations that need dedicated, guaranteed support, check out our **[Enterprise offerings](https://docs.openwebui.com/enterprise)**.
+
+**To get the best help:**
+1. **Search first.** Check these docs, [Discord](https://discord.gg/5rJgQTnV4s), [Reddit](https://www.reddit.com/r/OpenWebUI/), [GitHub Discussions](https://github.com/open-webui/open-webui/discussions), and [Issues](https://github.com/open-webui/open-webui/issues) — your question may already be answered.
+2. **Try the Discord bot.** In our [Discord server](https://discord.gg/5rJgQTnV4s)'s **#questions** channel, we have an experimental bot that has access to all issues, all discussions, and the entire documentation. Simply ping the bot with your question in the same message, wait a few seconds, and it will answer you. As our documentation improves, so does the bot.
+3. **Provide details.** When asking for help, include: your Open WebUI version, deployment method (Docker/pip), model provider and model name, relevant settings (screenshots of the Admin Panel section are ideal), and steps to reproduce the issue.
+4. **Be kind.** Contributors volunteer their limited time — respectful, well-prepared questions go a long way. Please review our **[Code of Conduct](https://github.com/open-webui/open-webui/blob/main/CODE_OF_CONDUCT.md)** before participating.
+
+**Where to ask:**
+- 🤖 **Quick Answers**: [Discord #questions channel](https://discord.gg/5rJgQTnV4s) — try the bot first, it can answer most Open WebUI questions
+- 🐛 **Bugs**: [GitHub Issues](https://github.com/open-webui/open-webui/issues) — please use the issue template and include all requested information (Open WebUI version, browser, deployment method, expected vs. actual behavior, and logs). Clear steps to reproduce the issue along with relevant settings are essential — reproducibility is key to getting bugs resolved quickly. Reports missing key details may be closed or converted to discussions.
+- 💬 **Questions & Help**: [Discord](https://discord.gg/5rJgQTnV4s) (most active community), [Reddit](https://www.reddit.com/r/OpenWebUI/), or [GitHub Discussions](https://github.com/open-webui/open-webui/discussions)
+- 💡 **Feature Requests**: [GitHub Discussions](https://github.com/open-webui/open-webui/discussions/new/choose)
+
+:::important
+All community participants are expected to follow our **[Code of Conduct](https://github.com/open-webui/open-webui/blob/main/CODE_OF_CONDUCT.md)**. Hostile or disruptive behavior will result in immediate action.
+:::
 
 ### Q: How do I customize the logo and branding?
 
@@ -15,19 +32,37 @@ For more details on enterprise solutions and branding customizations, [click her
 
 ### Q: Is my data being sent anywhere?
 
-**A:** No, your data is never sent anywhere unless you explicitly choose to share it or you connect an external model provider. Everything inside Open WebUI runs and is stored locally on your machine or server, giving you full control over your data at all times. We encourage you not to simply take our word for it: our entire codebase is hosted publicly, so you can inspect exactly how everything works, and if you ever notice anything concerning, please report it to us on our repo immediately.
+**A:** Open WebUI does not send your data to external services by default. If you connect an external model provider, prompts and responses are sent to that provider as needed to generate responses. Everything else runs and is stored locally on your machine or server. Our entire codebase is hosted publicly, so you can inspect exactly how everything works, and if you ever notice anything concerning, please report it to us on our repo immediately.
 
-### Q: Can I use Open WebUI in outer space (e.g., Mars and beyond) or other extreme environments?
+### Q: How can I see a list of all the chats I've ever shared?
 
-**A:** **Yes.** Open WebUI is fully self-hosted and does not rely on persistent internet connectivity, making it suitable for environments where cloud-based systems are impractical or impossible. As long as the underlying hardware can run a supported runtime, Open WebUI will function normally regardless of location.
+**A:** Open WebUI provides a centralized **Shared Chats** dashboard where you can see every link you've generated. This is available to all users via **Settings > Data Controls > Shared Chats > Manage**. From there, you can search through your shared history, re-copy links, or revoke (unshare) access to any conversation instantly.
 
-This includes outer space and off-planet environments such as spacecraft, space stations, lunar bases, and Mars transit or surface habitats, where communication delays or total isolation make external dependencies unworkable. Open WebUI’s offline-first architecture ensures that models, tools, and data remain local and predictable even under extreme latency or complete disconnection.
+### Q: How can I manage or delete files I've uploaded?
 
-The same principles apply in harsh terrestrial settings, including submarines, polar research stations, underground facilities, air-gapped networks, disaster zones, and mobile command environments. In short, if your system can boot, power itself, Open WebUI will run—by design.
+**A:** You can access the **File Manager** by going to **Settings > Data Controls > Manage Files > Manage**. This dashboard allows you to search through all your uploaded documents, view their details, and delete them. Deleting a file here also automatically cleans up any associated Knowledge Base entries and vector embeddings.
+
+### Q: I get "The prompt is too long" / "context length exceeded" after a while in a chat. How do I fix it?
+
+**A:** This error comes from the **model provider**, not from Open WebUI — the provider counts the tokens of everything you sent (system prompt + the *entire* chat history + attached files + tool calls + your new message) and rejects the request once it exceeds the model's context window. The "prompt" the model sees is the whole conversation, not just your latest message.
+
+Open WebUI intentionally does **not** ship a built-in context trimmer. Every model has a different tokenizer and a different context window, and every deployment wants a different truncation policy (by tokens, by turns, by message count, file-attachments-first, summarize-and-replace, per-model budgets, and so on). There is no single policy that is correct for every user, so we expose the hook instead of choosing one for you.
+
+Context management is done with [filter Functions](/features/extensibility/plugin/functions/filter): `inlet()` receives the full `body["messages"]` on every request and can modify it freely (drop old turns, enforce a turn limit, summarize, trim attachments, etc.). Many community-maintained context filters are already available one-click on [openwebui.com](https://openwebui.com/) — browse, install, and tune the valves. If none fits, copy the closest one into **Admin Panel → Functions** and edit it.
+
+For the full write-up with examples, see [Context Window / Prompt Too Long](/troubleshooting/context-window).
+
+### Q: Can I use Open WebUI offline, in air-gapped networks, or in extreme environments like outer space?
+
+**A:** **Yes.** Open WebUI is a self-hosted, **internet-independent AI platform** designed to work in **air-gapped networks**, **remote deployments**, and any environment where cloud-based systems are impractical or impossible. Whether you need to **run an LLM without internet**, deploy a **private AI with no cloud dependency**, or operate a **local AI chatbot offline**, Open WebUI supports all of these out of the box. It runs entirely on local hardware and does not make external calls by default.
+
+This **Earth-independent architecture** is well suited as an **AI interface for space exploration** — spacecraft, the ISS, lunar bases, Mars habitats, and deep-space missions — where communication delays or total network isolation make cloud AI unworkable. Whether you need **self-hosted AI for remote locations** or need to **run AI in a disconnected environment**, Open WebUI's **offline-first design** keeps models, tools, and data local and predictable even under extreme latency or complete disconnection.
+
+The same principles apply to harsh terrestrial settings: submarines, polar research stations, underground facilities, **air-gapped networks**, disaster zones, field operations, and mobile command environments. Open WebUI serves as an **offline AI interface** for defense, research, and critical infrastructure where internet access is unavailable, unreliable, or prohibited. If your system can boot and power itself, Open WebUI is designed to run — no network required.
 
 ### Q: Why am I asked to sign up? Where are my data being sent to?
 
-**A:** We require you to sign up to become the admin user for enhanced security. This ensures that if the Open WebUI is ever exposed to external access, your data remains secure. It's important to note that everything is kept local. We do not collect your data. When you sign up, all information stays within your server and never leaves your device. Your privacy and security are our top priorities, ensuring that your data remains under your control at all times.
+**A:** We require you to sign up to become the admin user for enhanced security. This helps protect your instance if it is ever exposed to external access. Open WebUI does not collect your data. When you sign up, all information is stored locally on your server and is not sent to Open WebUI or any third party by default.
 
 ### Q: Why can't my Docker container connect to services on the host using `localhost`?
 
@@ -82,7 +117,7 @@ On most Linux systems, your volume data is physically stored at: `/var/lib/docke
 
 By choosing the official Docker package, you benefit from consistent behavior across different environments, more reliable troubleshooting support, and access to the latest Docker advancements. The broader Docker community and resources are also more aligned with the official package, providing you with a wealth of information and support for any issues you might encounter.
 
-Everything you need to run Open WebUI, including your data, remains within your control and your server environment, emphasizing our commitment to your privacy and security. For instructions on installing the official Docker package, please refer to the [Install Docker Engine](https://docs.docker.com/engine/install/) guide on Docker's official documentation site.
+Everything you need to run Open WebUI, including your data, remains within your server environment. For instructions on installing the official Docker package, please refer to the [Install Docker Engine](https://docs.docker.com/engine/install/) guide on Docker's official documentation site.
 
 ### Q: Is GPU support available in Docker?
 
@@ -130,7 +165,7 @@ docker run -d -p 3000:8080 -e HF_ENDPOINT=https://hf-mirror.com/ --add-host=host
 
 ### Q: Why are my reasoning model's thinking blocks showing as raw text instead of being hidden?
 
-**A:** This happens if the model's thinking tags are not recognized by Open WebUI. You can customize the tags in the model's Advanced Parameters. For more details, see the **[Reasoning & Thinking Models](/features/chat-features/reasoning-models)** guide.
+**A:** This happens if the model's thinking tags are not recognized by Open WebUI. You can customize the tags in the model's Advanced Parameters. For more details, see the **[Reasoning & Thinking Models](/features/chat-conversations/chat-features/reasoning-models)** guide.
 
 ### Q: RAG with Open WebUI is very bad or not working at all. Why?
 
@@ -165,7 +200,7 @@ def wait_for_processing(token, file_id):
         time.sleep(2)  # Wait before checking again
 ```
 
-For complete workflow examples, see the **[API Endpoints documentation](/getting-started/api-endpoints#checking-file-processing-status)** and the **[RAG Troubleshooting guide](/troubleshooting/rag#9-api-file-upload-the-content-provided-is-empty-error-)**.
+For complete workflow examples, see the **[API Endpoints documentation](/reference/api-endpoints#checking-file-processing-status)** and the **[RAG Troubleshooting guide](/troubleshooting/rag#9-api-file-upload-the-content-provided-is-empty-error)**.
 
 ### Q: I asked the model what it is and it gave the wrong answer. Is Open WebUI routing to the wrong model?
 
@@ -217,15 +252,64 @@ For more optimization tips, see the **[Performance Tips Guide](troubleshooting/p
 
 ### Q: Is MCP (Model Context Protocol) supported in Open WebUI?
 
-**A:** Yes, Open WebUI now includes **native support for MCP Streamable HTTP**, enabling direct, first-class integration with MCP tools that communicate over the standard HTTP transport. For any **other MCP transports or non-HTTP implementations**, you should use our official proxy adapter, **MCPO**, available at 👉 [https://github.com/open-webui/mcpo](https://github.com/open-webui/mcpo). MCPO provides a unified OpenAPI-compatible layer that bridges alternative MCP transports into Open WebUI safely and consistently. This architecture ensures maximum compatibility, strict security boundaries, and predictable tool behavior across different environments while keeping Open WebUI backend-agnostic and maintainable.
+**A:** Yes, Open WebUI includes **native support for MCP Streamable HTTP**, enabling direct, first-class integration with MCP tools that communicate over the standard HTTP transport. For any **other MCP transports or non-HTTP implementations**, you should use our official proxy adapter, **MCPO**, available at 👉 [https://github.com/open-webui/mcpo](https://github.com/open-webui/mcpo). MCPO provides a unified OpenAPI-compatible layer that bridges alternative MCP transports into Open WebUI safely and consistently. This architecture ensures maximum compatibility, strict security boundaries, and predictable tool behavior across different environments while keeping Open WebUI backend-agnostic and maintainable.
 
-### Q: Why doesn't Open WebUI support [Specific Provider]'s latest API (e.g. OpenAI Responses API)?
+### Q: Why doesn't Open WebUI natively support [Provider X]'s proprietary API?
 
-**A:** Open WebUI is built around **universal protocols**, not specific providers. Our core philosophy is to support standard, widely-adopted APIs like the **OpenAI Chat Completions protocol**. 
+**A:** Open WebUI is highly modular with a plugin system including tools, functions, and most notably **[pipes](/features/extensibility/plugin/functions/pipe)**. These modular pipes allow you to add support for virtually any provider you want—you can build your own or choose from the many [community-built](https://openwebui.com/) and usually well-maintained ones already available.
 
-This protocol-centric design ensures that Open WebUI remains backend-agnostic and compatible with dozens of providers (like OpenRouter, LiteLLM, vLLM, and Groq) simultaneously. We avoid implementing proprietary, provider-specific APIs (such as OpenAI's stateful Responses API or Anthropic's Messages API) to prevent unsustainable architectural bloat and to maintain a truly open ecosystem. 
+That said, Open WebUI's core is built around **universal protocols**, not specific providers. Our stance is to support standard, widely-adopted APIs like the **OpenAI Chat Completions protocol**. 
 
-If you need functionality exclusive to a proprietary API (like OpenAI's hidden reasoning traces), we recommend using a proxy like **LiteLLM** or **OpenRouter**, which translate those proprietary features into the standard Chat Completions protocol that Open WebUI supports.
+This protocol-centric design ensures that Open WebUI remains backend-agnostic and compatible with dozens of providers simultaneously. We avoid implementing proprietary, provider-specific APIs in the core to prevent unsustainable architectural bloat and to maintain a truly open ecosystem.
+
+:::note Experimental: Open Responses
+As new standards emerge that gain broad adoption, we may add experimental support. Connections can now optionally be configured to use **[Open Responses](https://www.openresponses.org/)**—an open specification for multi-provider interoperability with consistent streaming events and tool use patterns.
+:::
+
+We understand this request comes up frequently, especially for major providers. Here's why we've made this deliberate architectural decision:
+
+#### 1. The Cascading Demand Problem
+
+Supporting one proprietary API sets a precedent. Once that precedent exists, every other major provider becomes a reasonable request. What starts as "just one provider" quickly becomes many integrations, each with their own quirks, authentication schemes, and breaking changes.
+
+#### 2. Maintenance is the Real Burden
+
+Adding integration code is the easy part. **Maintaining it forever** is where the real cost lies:
+- Each provider updates their API independently—when a provider changes something, we must update and test immediately
+- Changes in one integration can break compatibility with others
+- Every integration requires ongoing testing across multiple scenarios
+- Bug reports flood in for each provider whenever they make changes
+
+Contributors are **volunteers with full-time jobs**. Asking them to maintain 10+ provider integrations indefinitely is not sustainable.
+
+#### 3. Technical Complexity
+
+Each provider has different approaches to:
+- Reasoning/thinking content format and structure
+- Tool calling schemas and response formats
+- Authentication and request signing
+- Error handling and rate limiting
+
+This requires provider-specific logic throughout both the backend and frontend, significantly increasing the codebase complexity and tech debt.
+
+#### 4. Scale and Stability Requirements
+
+Open WebUI is used by major organizations worldwide. At this scale, stability is paramount, and extensive testing and backwards compatibility requirements become exponentially harder with each added provider.
+
+#### 5. Pipes are the Modular Solution
+
+The pipes architecture exists precisely to solve this problem. One-click install a community pipe and you get full provider API support. This is exactly the modularity that allows:
+- Community members to maintain provider-specific integrations
+- Users to choose only what they need
+- The core project to remain stable and maintainable
+
+:::tip The Recommended Path
+For providers that don't follow widely adopted API standards, use:
+- **[Open WebUI community](https://openwebui.com/)**: Community-maintained provider integrations (one-click install)
+- **Middleware proxies**: Tools like LiteLLM or OpenRouter can translate proprietary APIs to widely adopted API formats
+
+These solutions exist specifically to bridge the gap, and they're maintained by teams dedicated to that purpose.
+:::
 
 ### Q: Why is the frontend integrated into the same Docker image? Isn't this unscalable or problematic?
 
@@ -233,11 +317,11 @@ The assumption that bundling the frontend with the backend is unscalable comes f
 
 ### Q: Is Open WebUI scalable for large organizations or enterprise deployments?
 
-**A:** Yes, **Open WebUI is architected for massive scalability and production readiness.** It’s already trusted in deployments supporting extremely high user counts—**think tens or even hundreds of thousands of seats**—used by universities, multinational enterprises, and major organizations worldwide.
+**A:** Yes, **Open WebUI is architected for scalability and production readiness.** With the right infrastructure, it supports deployments at significant scale—**including organizations with tens of thousands of users**—across universities, multinational enterprises, and government agencies worldwide. See the [Scaling Guide](/getting-started/advanced-topics/scaling) for the infrastructure requirements at each stage.
 
-Open WebUI’s stateless, container-first architecture means you’re never bottlenecked by a single server. Through horizontal scaling, flexible storage backends, externalized authentication and database support, and full container orchestration compatibility (for example, Kubernetes or Docker Swarm), you can build robust, high-availability clusters to meet even the most demanding enterprise requirements.
+Open WebUI’s stateless, container-first architecture means you’re not limited to a single server. Through horizontal scaling, flexible storage backends, externalized authentication and database support, and full container orchestration compatibility (for example, Kubernetes or Docker Swarm), you can build robust, high-availability clusters to meet even the most demanding enterprise requirements.
 
-With the right infrastructure configuration, Open WebUI will effortlessly scale from pilot projects to mission-critical worldwide rollouts.
+With the right infrastructure configuration, Open WebUI is designed to scale from pilot projects to large-scale rollouts.
 
 ### Q: How can I deploy Open WebUI in a highly available, large-scale production environment?
 
@@ -272,4 +356,4 @@ We review every report in good faith and handle all submissions discreetly. Prot
 
 ### Need Further Assistance?
 
-If you have any further questions or concerns, please reach out to our [GitHub Issues page](https://github.com/open-webui/open-webui/issues) or our [Discord channel](https://discord.gg/5rJgQTnV4s) for more help and information.
+If you have any further questions or concerns, please reach out on our [Discord server](https://discord.gg/5rJgQTnV4s), [Reddit community](https://www.reddit.com/r/OpenWebUI/), [GitHub Issues](https://github.com/open-webui/open-webui/issues), or [GitHub Discussions](https://github.com/open-webui/open-webui/discussions) for more help and information. Please remember that all community interactions are governed by our **[Code of Conduct](https://github.com/open-webui/open-webui/blob/main/CODE_OF_CONDUCT.md)**.

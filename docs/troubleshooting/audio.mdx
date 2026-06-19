@@ -1,11 +1,8 @@
 ---
 sidebar_position: 3
-title: "Audio Troubleshooting"
+title: "Audio"
 ---
 
-import { TopBanners } from "@site/src/components/TopBanners";
-
-<TopBanners />
 
 # Audio Troubleshooting Guide
 
@@ -25,7 +22,7 @@ Admins can configure server-wide audio defaults:
 Here you can configure:
 - **Speech-to-Text Engine** — Choose between local Whisper, OpenAI, Azure, Deepgram, or Mistral
 - **Whisper Model** — Select model size for local STT (tiny, base, small, medium, large)
-- **Text-to-Speech Engine** — Choose between OpenAI-compatible, ElevenLabs, Azure, local Transformers, or disable backend TTS (browser-only)
+- **Text-to-Speech Engine** — Choose between OpenAI-compatible, Mistral, ElevenLabs, Azure, local Transformers, or disable backend TTS (browser-only)
 - **TTS Voice** — Select the default voice
 - **API Keys and Base URLs** — Configure external service connections
 
@@ -74,6 +71,27 @@ environment:
 
 → See full guides: [Speech-to-Text](/category/speech-to-text) | [Text-to-Speech](/category/text-to-speech)
 
+### Fast Setup: Mistral STT + TTS (Paid)
+
+If you prefer Mistral's audio stack:
+
+**In Admin Panel → Settings → Audio:**
+- **STT Engine:** `MistralAI` | **Model:** `voxtral-mini-latest` (or leave empty)
+- **TTS Engine:** `MistralAI` | **Model:** `mistral-tts-latest` (or leave empty) | **Voice:** choose from list
+- Enter your Mistral API key in both sections
+
+Or via environment variables:
+```yaml
+environment:
+  - AUDIO_STT_ENGINE=mistral
+  - AUDIO_STT_MISTRAL_API_KEY=...
+  - AUDIO_TTS_ENGINE=mistral
+  - AUDIO_TTS_MISTRAL_API_KEY=...
+  - AUDIO_TTS_MODEL=mistral-tts-latest
+```
+
+→ See guides: [Mistral Voxtral STT](/features/chat-conversations/audio/speech-to-text/mistral-voxtral-integration) | [Mistral TTS](/features/chat-conversations/audio/text-to-speech/mistral-tts-integration)
+
 ### Free Setup: Local Whisper + Edge TTS
 
 For a completely free setup:
@@ -99,7 +117,7 @@ services:
       - AUDIO_TTS_OPENAI_API_KEY=not-needed
 ```
 
-→ See full guide: [OpenAI Edge TTS](/features/audio/text-to-speech/openai-edge-tts-integration)
+→ See full guide: [OpenAI Edge TTS](/features/chat-conversations/audio/text-to-speech/openai-edge-tts-integration)
 
 ### Browser-Only Setup (No Backend Config Needed)
 
@@ -115,7 +133,7 @@ When the admin leaves `AUDIO_TTS_ENGINE` as an empty string (the default), no ba
 
 ## Microphone Access Issues
 
-### Understanding Secure Contexts 🔒
+### Understanding Secure Contexts
 
 For security reasons, accessing the microphone is restricted to pages served over HTTPS or locally from `localhost`. This requirement is meant to safeguard your data by ensuring it is transmitted over secure channels.
 
@@ -191,7 +209,7 @@ docker exec open-webui bash -lc "pip show datasets"
 ```
 
 :::tip
-Consider using an external TTS service like [OpenAI Edge TTS](/features/audio/text-to-speech/openai-edge-tts-integration) or [Kokoro](/features/audio/text-to-speech/Kokoro-FastAPI-integration) instead of local Transformers TTS to avoid these dependency conflicts.
+Consider using an external TTS service like [OpenAI Edge TTS](/features/chat-conversations/audio/text-to-speech/openai-edge-tts-integration) or [Kokoro](/features/chat-conversations/audio/text-to-speech/Kokoro-FastAPI-integration) instead of local Transformers TTS to avoid these dependency conflicts.
 :::
 
 #### 2. Using External TTS Instead of Local
@@ -324,6 +342,14 @@ environment:
    - Under STT Settings, try switching Speech-to-Text Engine to "Web API"
    - This uses the browser's built-in speech recognition
 
+### STT/TTS Failing with SSL Certificate Errors
+
+If your STT or TTS engine is hosted behind a self-signed certificate or an internal CA and requests fail with TLS verification errors (e.g. `SSLCertVerificationError`, `certificate verify failed`):
+
+- Set [`AIOHTTP_CLIENT_SESSION_SSL=False`](/reference/env-configuration#aiohttp_client_session_ssl) to disable certificate verification for these upstream calls.
+- As of v0.9.6 the audio endpoints honor this setting (previously STT/TTS ignored it and always verified, so this configuration had no effect on audio engines). If it still appears ignored, confirm you are on v0.9.6 or later.
+- Prefer installing the internal CA into the container's trust store where possible; disabling verification removes protection against man-in-the-middle interception on that connection.
+
 ---
 
 ## ElevenLabs Integration
@@ -403,12 +429,14 @@ curl http://your-tts-service:port/health
 
 | Variable | Description |
 |----------|-------------|
-| `AUDIO_TTS_ENGINE` | TTS engine: `""` (empty, disables backend TTS - uses browser), `openai`, `elevenlabs`, `azure`, `transformers` |
+| `AUDIO_TTS_ENGINE` | TTS engine: `""` (empty, disables backend TTS - uses browser), `openai`, `mistral`, `elevenlabs`, `azure`, `transformers` |
 | `AUDIO_TTS_MODEL` | TTS model to use (default: `tts-1`) |
 | `AUDIO_TTS_VOICE` | Default voice for TTS (default: `alloy`) |
 | `AUDIO_TTS_API_KEY` | API key for ElevenLabs or Azure TTS |
 | `AUDIO_TTS_OPENAI_API_BASE_URL` | Base URL for OpenAI-compatible TTS |
 | `AUDIO_TTS_OPENAI_API_KEY` | API key for OpenAI-compatible TTS |
+| `AUDIO_TTS_MISTRAL_API_KEY` | API key for Mistral TTS |
+| `AUDIO_TTS_MISTRAL_API_BASE_URL` | Base URL for Mistral TTS |
 
 ### STT Environment Variables
 
@@ -422,8 +450,9 @@ curl http://your-tts-service:port/health
 | `AUDIO_STT_OPENAI_API_BASE_URL` | Base URL for OpenAI-compatible STT |
 | `AUDIO_STT_OPENAI_API_KEY` | API key for OpenAI-compatible STT |
 | `DEEPGRAM_API_KEY` | Deepgram API key |
+| `AIOHTTP_CLIENT_SESSION_SSL` | TLS verification for outbound STT/TTS API calls (default: `True`; set `False` for self-signed certs — honored by audio engines since v0.9.6) |
 
-For a complete list of audio environment variables, see [Environment Variable Configuration](/getting-started/env-configuration#audio).
+For a complete list of audio environment variables, see [Environment Variable Configuration](/reference/env-configuration#audio).
 
 ---
 

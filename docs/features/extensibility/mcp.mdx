@@ -1,0 +1,205 @@
+---
+title: Model Context Protocol (MCP)
+sidebar_position: 200
+---
+
+Open WebUI natively supports **MCP (Model Context Protocol)** starting in **v0.6.31**. This page shows how to enable it quickly, harden it for production, and troubleshoot common snags.
+
+:::info 
+Requires **Open WebUI v0.6.31+**.
+:::
+
+:::danger Prerequisite: WEBUI_SECRET_KEY
+You **MUST** set the `WEBUI_SECRET_KEY` environment variable in your Docker setup. Without it, **OAuth-connected MCP tools (like Notion)** will **break** every time you restart or recreate the container (Error: `Error decrypting tokens`), forcing you to re-authenticate everything.
+:::
+
+## 🚀 Quick start 
+
+1. Open **⚙️ Admin Settings → External Tools**.
+2. Click **+ (Add Server)**.
+3. Set **Type** to **MCP (Streamable HTTP)**.
+4. Enter your **Server URL** and **Auth** details (OAuth 2.1, if required).
+5. **Save**. If prompted, restart Open WebUI.
+
+You can now call tools exposed by your MCP server from Open WebUI.
+
+:::warning Common Mistake: Wrong Connection Type
+If you are adding an MCP server, make sure **Type** is set to **MCP (Streamable HTTP)**, not **OpenAPI**.
+
+Entering MCP-style configuration (with `mcpServers` in JSON) into an OpenAPI connection will cause the UI to crash or display an infinite loading screen. If you encounter this:
+
+1. Disable the problematic tool connection via Admin Settings
+2. Re-add it with the correct **Type** set to **MCP**
+:::
+
+## 🔒 MCP servers are admin-only {#mcp-servers-are-admin-only}
+
+MCP servers can only be added by **administrators**, under **Admin Settings → External Tools**. Regular users cannot register their own, by design.
+
+This is **not** the same restriction as OpenAPI. When you grant the **Direct Tool Servers** permission (per user or per group, off by default), users can add their own **OpenAPI** tool servers under **Settings → Tools**, but that path is OpenAPI-only: the connection type is locked, with no MCP option.
+
+The difference is capability. A user-supplied OpenAPI server is a stateless HTTP URL exposing a fixed set of declared endpoints. An MCP server is far more powerful: it is stateful and capability-rich (sampling, elicitation, persistent sessions and arbitrary host command execution over stdio transports), and it runs inside Open WebUI's trust boundary with the connecting user's full scope. In practice a malicious or compromised MCP server could execute code and read or exfiltrate data with that user's access, so the capability stays admin-gated. Open WebUI's own MCP support is Streamable HTTP only, but the protocol's privileged nature is why adding one is reserved for admins.
+
+To give users an MCP-backed capability without server-configuration rights, an admin adds the server once and scopes it with **Access Control** to the right users or groups.
+
+## 🧭 When to use MCP vs OpenAPI
+
+:::tip 
+For most deployments, **OpenAPI** remains the **preferred** integration path.
+:::
+
+Choose **OpenAPI** if you want:
+
+* **Enterprise readiness**: deep SSO, API gateways, audit, quotas, typed SDKs.
+* **Operational resilience**: standard HTTP verbs, idempotency, caching, rich error codes.
+* **Observability**: first-class tracing and policy integration.
+
+Choose **MCP (Streamable HTTP)** if you need:
+
+* A **common tool protocol** already used by your MCP servers/clients.
+* **Streamed** protocol communication over HTTP (Note: This refers to MCP's transport-level streaming, not Open WebUI's [UI event system](/features/extensibility/plugin/development/events) which is only available for native Python tools).
+
+> You don’t have to pick one: many teams expose OpenAPI internally and **wrap MCP** at the edge for specific clients.
+
+:::warning
+Browser-based, multi-user deployments increase the surface area (CORS/CSRF, per-user isolation, reconnects). Review your org’s auth, proxy, and rate-limiting policies before exposing MCP externally.
+:::
+
+## ⚙️ Configuration Best Practices
+
+### Authentication Modes
+
+*   **None**: Use this for **local MCP servers** or internal networks where no token is required.
+    *   **⚠️ Important**: Default to "None" unless your server strictly requires a token. Selecting "Bearer" without providing a key sends an empty Authorization header (`Authorization: Bearer`), which causes many servers to reject the connection immediately.
+*   **Bearer**: Use this **only** if your MCP server requires a specific API token. You **must** populate the "Key" field.
+*   **OAuth 2.1**: Uses Dynamic Client Registration (DCR). Best when your MCP server supports registering OAuth clients automatically.
+*   **OAuth 2.1 (Static)**: Uses a pre-created client ID/client secret. Best when your provider does not support DCR, or when your security team requires manually managed credentials.
+
+:::tip Choosing Between OAuth 2.1 and OAuth 2.1 (Static)
+
+- Start with **OAuth 2.1** if your server supports DCR.
+- Use **OAuth 2.1 (Static)** when you already have credentials from your IdP and want Open WebUI to use those directly.
+
+:::
+
+### OAuth 2.1 (Static) Setup
+
+Use this when you already have a client ID/client secret from your identity provider.
+
+1. Open **Admin Settings → External Tools**.
+2. Click **+ (Add Server)**.
+3. Set **Type** to **MCP (Streamable HTTP)**.
+4. Enter your MCP server **URL**.
+5. In **Auth**, select **OAuth 2.1 (Static)**.
+6. Enter **Client ID** and **Client Secret**.
+7. *(Optional)* Enter an **OAuth Server URL** if your identity provider lives on a different host than the MCP resource server. When empty, Open WebUI fetches the OAuth discovery document from the MCP **URL**; when set, discovery and the static-credentials registration both run against this URL instead. Useful for setups where the MCP server proxies a corporate IdP at a separate origin.
+8. Click **Register Client**.
+9. Click **Save**.
+
+After saving:
+
+1. Open a chat.
+2. Click **+ → Integrations → Tools**.
+3. Enable your MCP tool.
+4. Complete the OAuth consent/authorization flow in the browser redirect.
+
+:::info
+
+`Register Client` is required for both `oauth_2.1` and `oauth_2.1_static`. With static auth, Open WebUI uses your provided credentials and server metadata discovery (no dynamic client registration).
+
+:::
+
+:::info Resource Indicators (RFC 8707)
+
+If the MCP server publishes a `resource` field in its [RFC 9728 Protected Resource Metadata document](https://datatracker.ietf.org/doc/html/rfc9728) (`/.well-known/oauth-protected-resource`), Open WebUI captures it during discovery and forwards it as the `resource` parameter on the **authorization redirect**, on the **token exchange**, and on every **refresh-token call**. This sets the `aud` claim correctly on issued tokens and is required by identity providers that validate audiences strictly per [RFC 8707](https://datatracker.ietf.org/doc/html/rfc8707).
+
+No configuration is needed on the Open WebUI side — the resource indicator is discovered automatically. If your IdP rejects MCP tool calls with `invalid_audience` or similar errors, confirm that your MCP server's protected-resource metadata document advertises the correct `resource` URL.
+
+:::
+
+:::warning OAuth 2.1 Tools Cannot Be Set as Default Tools
+**Do not set OAuth 2.1 MCP tools as default/pre-enabled tools on a model.** The OAuth 2.1 authorization flow requires an interactive browser redirect (user consent, callback) that cannot happen transparently during a chat completion request.
+
+If an OAuth 2.1 tool is set as a default and the user hasn't previously authenticated (or their refresh token has expired), the tool call will fail with **"Failed to connect to MCP server"** because the backend cannot initiate the browser-based auth flow mid-request.
+
+**Workaround:** Users should manually enable OAuth 2.1 tools per-chat via the **➕** button in the chat input area. This triggers the auth flow before the tool is ever invoked. Token refresh works automatically once the initial authentication is complete.
+:::
+
+### Connection URLs
+
+If you are running Open WebUI in **Docker** and your MCP server is on the **host machine**:
+*   Use `http://host.docker.internal:<port>` (e.g., `http://host.docker.internal:3000/sse`) instead of `localhost`.
+
+### Custom Headers
+
+Both MCP and OpenAPI tool-server connections accept a free-form **Headers** field (JSON object) that is merged into every outbound request. Header values support a small set of template tokens, expanded server-side at request time so you can route a single connection to per-user, per-chat, or per-message backend logic without provisioning separate connections:
+
+| Token | Replaced with |
+| :--- | :--- |
+| `{{USER_ID}}` | The calling user's ID. |
+| `{{USER_NAME}}` | The calling user's display name. |
+| `{{USER_EMAIL}}` | The calling user's email address. |
+| `{{USER_ROLE}}` | The calling user's role (e.g. `admin`, `user`). |
+| `{{CHAT_ID}}` | The current chat ID (empty in non-chat contexts like the **Verify Connection** button). |
+| `{{MESSAGE_ID}}` | The current message ID (empty in non-chat contexts). |
+
+Unknown tokens are passed through as literal text. Non-string header values are coerced to strings before substitution. The same tokens are honored on custom headers attached to OpenAI-compatible model connections in **Admin Settings → Connections → OpenAI**, so you can use the feature for tenant routing or audit-trail propagation across both surfaces.
+
+:::note
+`{{USER_EMAIL}}` and `{{USER_ROLE}}` were added in v0.9.6. The same release also fixed MCP server connections, where custom-header templates were previously stored but **not** interpolated at request time — they now expand the same way they always have for direct connections and OpenAPI tool servers.
+:::
+
+### Function Name Filter List
+
+This field restricts which tools are exposed to the LLM.
+*   **Default**: Leave empty to expose all tools (in most cases).
+*   **Workaround**: If you encounter connection errors with an empty list, try adding a single comma (`,`) to this field. This forces the system to treat it as a valid (but empty) filter, potentially bypassing some parsing issues.
+
+## Troubleshooting
+
+### "Failed to connect to MCP server"
+
+**Symptom**: 
+The chat shows "Failed to connect to MCP server" when using a tool, even if the **Verify Connection** button in settings says "Connected".
+
+**Solutions**:
+1.  **Check Authentication**: Ensure you haven't selected `Bearer` without a key. Switch to `None` if no token is needed.
+2.  **Filter List Bug**: If the "Function Name Filter List" is empty, try adding a comma (`,`) to it.
+3.  **OAuth 2.1 Default Tool**: If the failing tool uses OAuth 2.1 and is set as a default tool on the model, this is a known limitation. Remove it from the model's default tools and have users enable it manually per-chat.
+4.  **Slow handshake**: If the server cold-starts slowly or exposes many tools, the `session.initialize()` handshake can exceed its timeout. Raise [`MCP_INITIALIZE_TIMEOUT`](/reference/env-configuration#mcp_initialize_timeout) (default `10` seconds).
+
+### Infinite loading screen after adding External Tool
+
+**Symptom**: 
+After adding an External Tool connection, the frontend gets stuck on a loading spinner. The browser console shows an error like `Cannot convert undefined or null to object at Object.entries`.
+
+**Cause**: 
+You likely configured an **MCP server** using the **OpenAPI** connection type, or entered MCP-style JSON (containing `mcpServers`) into an OpenAPI connection.
+
+**Solution**:
+1.  Open **Admin Settings → External Tools** (the sidebar still loads)
+2.  **Disable** or **delete** the problematic tool connection
+3.  Refresh the page (Ctrl+F5)
+4.  Re-add the connection with the correct **Type** set to **MCP (Streamable HTTP)**
+
+## ❓ FAQ
+
+**Do you support stdio or SSE transports?**
+
+Native MCP support in Open WebUI is **Streamable HTTP only**. This design choice reflects our architecture: Open WebUI is a **web-based, multi-tenant environment**, not a local desktop process.
+
+Browsers operate within strict **sandboxed and event-driven HTTP constraints**, making long-lived stdio or SSE connections difficult to maintain securely across users and sessions.
+
+If you need to bridge those other MCP transports, check out [**mcpo**](https://github.com/open-webui/mcpo) — an open-source proxy that translates **stdio or SSE-based MCP servers into OpenAPI-compatible endpoints**. It effectively lets you run traditional MCP tools inside Open WebUI without modifying their transport layer.
+
+**Is MCP considered stable here?**
+
+Supported and improving. The broader ecosystem is still evolving; expect occasional breaking changes.
+
+**Can I mix OpenAPI and MCP tools?**
+
+Yes. Many deployments do both.
+
+**Can users add their own MCP servers?**
+
+No. Adding MCP servers is admin-only (**Admin Settings → External Tools**). Users with the **Direct Tool Servers** permission can add their own **OpenAPI** tool servers, but not MCP. See [MCP servers are admin-only](#mcp-servers-are-admin-only) for the reasoning.

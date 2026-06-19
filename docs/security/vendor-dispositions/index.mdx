@@ -1,0 +1,49 @@
+---
+sidebar_position: 0
+title: "📄 Vendor Dispositions"
+---
+
+# Vendor Dispositions
+
+**Open WebUI's formal assessments of externally reported CVEs and security claims.**
+
+When a CVE is filed against Open WebUI, we evaluate the report against our [Security Policy](../security-policy), our documented [threat model](#threat-model), and the actual behavior of the software. If a report is inaccurate, mischaracterized, or does not represent a genuine vulnerability, we publish a vendor disposition here explaining our assessment.
+
+---
+
+## What Is a Vendor Disposition?
+
+A **vendor disposition** is the software vendor's official, public response to a CVE or vulnerability report. It is a standard part of the coordinated vulnerability disclosure process and serves several purposes:
+
+- **Transparency** — Users and administrators can see exactly how we evaluated a claim and why we reached our conclusion.
+- **Accuracy** — CVE databases sometimes contain reports that misrepresent severity, misunderstand the threat model, or describe intended behavior as a vulnerability. Dispositions correct the public record.
+- **Guidance** — Each disposition includes context that helps administrators assess whether the reported issue is relevant to their specific deployment.
+
+---
+
+## Threat Model
+
+Open WebUI is a **self-hosted, authenticated, role-based** application. It can be deployed publicly, but requires proper configuration (TLS termination, reverse proxy, appropriate access controls). Our threat model assumes:
+
+- All users are **authenticated** before accessing any functionality.
+- **Administrators** are trusted actors with full system control.
+- **Security settings are at their defaults or tighter** — the threat model does not assume intentional weakening of security settings. Valid vulnerability reports must be reproducible on default or stricter configurations.
+- **Tools, Functions, and Pipelines** execute arbitrary code by design — this is a feature, not a vulnerability. Administrators control who can install and use them.
+
+Reports that ignore these architectural assumptions — for example, claiming a vulnerability that requires admin-level access, intentionally weakened settings, or misconfigured deployments — may be disputed.
+
+For a full overview, see the [Security Policy](../security-policy).
+
+## All Dispositions
+
+<!-- Add new dispositions to the top of this table as pages are created. -->
+
+| CVE | Title | Disposition | Published |
+| :--- | :--- | :--- | :--- |
+| [CVE-2025-15603](./cve-2025-15603) | Insufficiently Random Values in start_windows.bat | Rejected | 2026-03-09 |
+| [CVE-2026-0765](./cve-2026-0765) | PIP install_frontmatter_requirements Command Injection | Rejected | 2026-01-23 |
+| [CVE-2026-0766](./cve-2026-0766) | load_tool_module_by_id Code Injection | Rejected | 2026-01-23 |
+| [CVE-2026-0767](./cve-2026-0767) | Cleartext Transmission of Credentials | Rejected | 2026-01-23 |
+| [CVE-2025-63391](./cve-2025-63391) | Authentication Bypass in /api/config | Rejected | 2025-12-18 |
+| [CVE-2024-7040](./cve-2024-7040) | Cross-Admin Chat Access via user_id Parameter | Rejected | 2025-10-15 |
+| [CVE-2025-29446](./cve-2025-29446) | SSRF in verify_connection | Rejected | 2025-04-21 |

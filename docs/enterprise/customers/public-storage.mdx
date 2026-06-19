@@ -1,0 +1,139 @@
+---
+sidebar_position: 2
+title: "Public Storage"
+description: "How Public Storage used a champion-driven rollout to deploy a secure, private generative AI platform with Open WebUI on GCP, reaching ~50% active adoption in 30 days and reducing a key operational workflow by more than 80%."
+keywords: ["Public Storage AI", "Open WebUI case study", "enterprise AI platform", "private AI deployment", "GCP AI deployment", "PII redaction AI", "AI productivity", "secure generative AI", "champion-driven AI adoption", "real estate AI"]
+---
+
+# Public Storage Scales a Secure, Champion-Driven AI Platform Across Every Corporate Function With Open WebUI
+
+![Public Storage](/images/enterprise/customers/public-storage/hero.png)
+
+## Overview
+
+:::info
+How Public Storage used a **champion-driven rollout** to deploy a secure, private generative AI platform with **Open WebUI** on GCP, reaching **~50% active adoption in 30 days** and reducing a key operational workflow by **more than 80%**.
+:::
+
+### At a Glance
+
+- **Users**: 5,000–10,000 employees
+- **Region**: United States (data residency enforced)
+- **Industry**: Real Estate
+- **Deployment**: GCP (containerized, private networking)
+- **Models**: Anthropic Claude (primary), OpenAI GPT (high-volume), Llama, Gemma (open-weight)
+- **Time-to-deploy**: 2-week pilot, full availability in 30 days
+- **Adoption**: ~50% active usage in the first month
+- **Key Results**: Significant time savings on operational workflows, cross-functional AI enablement, enterprise-grade governance
+
+
+## About Public Storage
+
+[Public Storage](https://www.publicstorage.com/) is a Fortune 500 self-storage REIT operating over 3,000 facilities across the United States. With millions of customers and thousands of employees spanning corporate offices, call centers, and field operations, the company manages one of the largest real-estate portfolios in the world. That operational footprint makes consistent, governed access to AI a meaningful competitive advantage.
+
+## The Challenge: Scaling AI Safely Across the Enterprise
+
+As generative AI tools gained momentum, Public Storage recognized both the opportunity and the risk. Teams across the organization were beginning to experiment with AI independently, creating a fragmented landscape of ad-hoc subscriptions and ungoverned usage.
+
+Leadership set a clear objective: provide a **secure, centralized AI platform** that would raise AI literacy across the organization, surface high-value business use cases, and enable repeatable productivity gains, all without compromising data security or compliance.
+
+**Key Requirements**
+
+- **Private deployment** within the enterprise GCP environment
+- **Access restricted** to authenticated employees behind the corporate firewall
+- **SSO integration** with existing identity provider **Okta**
+- **Model flexibility** without vendor or single-LLM lock-in
+- **Full audit trails**, DLP policies, and PII redaction
+- **Role-based access control** by group
+
+SaaS-based AI tools offered convenience but lacked the privacy controls, network restrictions, and model flexibility that Public Storage required.
+
+## The Solution: Open WebUI on GCP
+Open WebUI was selected for its **extensible foundation**: an open architecture that allowed Public Storage to evolve from a basic chat interface into a secure, multi-model internal AI platform. It supported rapid iteration, broad model choice, and enterprise governance while remaining fully private.
+
+**Architecture Highlights**
+- **Compute / Orchestration**: Containerized workloads on GCP, autoscaled to internal demand
+- **Storage / Database**: Managed PostgreSQL and secure object storage (GCP-native)
+- **Networking**: Private networking; access restricted to authenticated employees behind the corporate firewall; private endpoints for open-weight LLM APIs
+- **CI/CD**: Automated pipelines for controlled Open WebUI upgrades
+- **Logging / Monitoring**: Centralized logging and usage dashboards via GCP-native tooling and **Langfuse** for LLM observability
+- **Security Controls**: MFA via IdP, RBAC by group, data residency enforced, PII redaction with user-facing interruption, moderation guardrails, audit exports to SIEM, DLP policies, egress restrictions
+ 
+
+> “Our goal wasn’t just to deploy AI, but to scale it responsibly. Open WebUI allows us to crowdsource high-value use cases from the business while maintaining the governance we need.” — CTO, Public Storage
+
+## Models & Data Handling
+
+Public Storage runs a **multi-model strategy** to balance capability, privacy, and cost:
+
+- **Primary**: Anthropic Claude (zero data retention)
+- **High-volume**: OpenAI GPT models (zero data retention)
+- **Open-weight**: Llama and Gemma for private, on-infrastructure workloads
+- **RAG**: Default Sentence Transformers for embeddings, with ongoing optimization of retrieval performance
+- **PII Handling**: A custom filter **strips PII and halts processing with a user-facing notice** before any sensitive data reaches a model. This active-interruption approach goes beyond silent redaction
+
+## Adoption & Enablement
+
+Public Storage took a deliberate, champion-driven approach to rollout. A **two-week pilot with designated adoption champions** preceded the broader launch, reaching full availability within 30 days.
+
+Enablement focused on **practical, role-specific use cases** rather than abstract AI training. The team ran 1.5-hour “PS.AI Orientation” sessions for early adopters, sharing real examples and best practices tailored to each function.
+
+Within the first month:
+
+- **~50% of onboarded users** were actively using the platform
+- Usage continued to grow as teams **shared successful workflows** with peers
+- **All corporate functions** were represented, including HR, Marketing, Finance, Legal, Call Center, Operations, Sales/Acquisitions, IT, and Risk Management
+
+> “We’re seeing real operational time savings from use cases built by the business, not just IT, which has accelerated adoption and delivered practical results.” — VP, Digital Technology, Public Storage
+
+## Results: Productivity, Adoption, and Governance
+
+![Phone screenshot of the Public Storage internal AI platform powered by Open WebUI.](/images/enterprise/customers/public-storage/open-webui.png)
+
+
+
+### 01. Operational Time Savings
+
+Teams across the organization reported significant productivity gains. One example: a District Manager **reduced a four-hour weekly reservation review process to approximately 40 minutes**, a more than 80% reduction.
+
+### 02. Cross-Functional Adoption
+
+**~50% active usage in the first month**, with adoption driven organically as employees built custom models and personas and shared business case opportunities across departments.
+
+### 03. Enterprise Governance
+
+- **Fully private deployment** with data residency enforced within GCP
+- Built-in PII redaction, moderation guardrails, DLP policies, and audit exports ensured **compliance without friction**
+- RBAC, MFA, and egress restrictions provided **layered security** across the platform
+
+## Top Use Cases
+
+- **Reservation analysis**: Summarizing reports and reservation details
+- **Field communications**: Drafting guidance, follow-ups, and internal communications
+- **Policy retrieval**: Knowledge retrieval over internal policies, procedures, and playbooks
+- **Cross-department agents**: Experimenting with tool-specific AI agents and sharing workflows across departments (HR, Legal, Call Center, Finance, and more)
+
+
+## Why Public Storage Chose Open WebUI
+
+Open WebUI stood out as the platform that could grow with Public Storage’s ambitions:
+
+- **Extensible foundation** that evolved from chat to a full internal AI platform
+- **Multi-model flexibility**: commercial and open-weight models, no lock-in
+- **Enterprise-grade governance**: PII redaction, audit trails, RBAC, DLP
+- **Rapid deployment** with minimal IT overhead
+- **Open architecture** supporting iteration without vendor dependencies
+
+The platform empowered every corporate function to discover and share AI-driven productivity gains, securely and at scale.
+
+
+
+---
+
+:::tip
+
+**Looking for an [Enterprise Plan](https://docs.openwebui.com/enterprise)?** — **[Speak with Our Sales Team Today!](https://docs.openwebui.com/enterprise)**
+
+Get **enhanced capabilities**, including **custom theming and branding**, **Service Level Agreement (SLA) support**, **Long-Term Support (LTS) versions**, and **more!**
+
+:::

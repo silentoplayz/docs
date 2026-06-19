@@ -1,5 +1,5 @@
 ---
-sidebar_position: 5
+sidebar_position: 1
 title: "Architecture & High Availability"
 ---
 
@@ -7,13 +7,13 @@ title: "Architecture & High Availability"
 
 When AI becomes central to your organization's operations, downtime isn't just inconvenient, it's costly. Open WebUI is architected from the ground up to support enterprise-scale deployments where reliability isn't optional.
 
-Whether you're supporting a pilot team of 15 or a global workforce of hundreds of thousands of users, Open WebUI's architecture scales with you, without requiring a complete rebuild as your needs grow.
+Whether you're supporting a pilot team of 15 or a global workforce of thousands of users, Open WebUI's architecture scales with you, without requiring a complete rebuild as your needs grow.
 
 ### Architecture Overview
 
 #### Stateless, Container-First Design
 
-Open WebUI follows a **stateless, container-first architecture**, meaning you are never bottlenecked by a single server. This design philosophy enables:
+Open WebUI follows a **stateless, container-first architecture**, meaning you are not limited to a single server. This design philosophy enables:
 
 * **Horizontal Scaling:** Add more instances as demand grows, rather than upgrading to larger (and more expensive) hardware.
 * **Flexible Deployment:** Run on-premise, in private clouds, or hybrid environments without architectural changes.
@@ -28,7 +28,9 @@ For organizations with demanding uptime requirements, Open WebUI supports produc
 | Component | Capability |
 | :--- | :--- |
 | **Load Balancing** | Multiple container instances behind a load balancer for resilience and optimal performance. |
-| **External Databases** | Scalable, reliable data storage separate from application instances. |
+| **External Databases** | PostgreSQL for the main database (SQLite is not supported for multi-instance). |
+| **External Vector Database** | A client-server vector database (PGVector, Milvus, Qdrant) or ChromaDB in HTTP server mode. The default ChromaDB local mode uses SQLite which is not safe for multi-process access. |
+| **Redis** | Required for session management, WebSocket coordination, and configuration sync across instances. |
 | **Persistent Storage** | Flexible storage backends to meet your data residency and performance requirements. |
 | **Observability** | Integration with modern logging and metrics tools for proactive monitoring. |
 
@@ -36,7 +38,7 @@ When properly configured, Open WebUI is designed to support high availability su
 
 ### Scalability in Practice
 
-Open WebUI isn't theoretically scalable, it's **proven at scale**. The platform is already trusted in deployments supporting extremely high user counts, including:
+Open WebUI isn't theoretically scalable, it's **deployed at scale**. The platform is already trusted in deployments supporting extremely high user counts, including:
 
 * 🎓 **Universities** managing institution-wide AI access.
 * 🏢 **Multinational Enterprises** deploying across regions and business units.

@@ -1,22 +1,26 @@
 ---
 sidebar_position: 10
-title: "Multi-Replica / High Availability / Concurrency"
+title: "Scaling & HA"
 ---
 
 # Multi-Replica, High Availability & Concurrency Troubleshooting
 
 This guide addresses common issues encountered when deploying Open WebUI in **multi-replica** environments (e.g., Kubernetes, Docker Swarm) or when using **multiple workers** (`UVICORN_WORKERS > 1`) for increased concurrency.
 
+If you are setting up a scaled deployment for the first time, start with the [Scaling Open WebUI](/getting-started/advanced-topics/scaling) guide for a step-by-step walkthrough.
+
 ## Core Requirements Checklist
 
 Before troubleshooting specific errors, ensure your deployment meets these **absolute requirements** for a multi-replica setup. Missing any of these will cause instability, login loops, or data loss.
 
-1.  **Shared Secret Key:** [`WEBUI_SECRET_KEY`](/getting-started/env-configuration#webui_secret_key) **MUST** be identical on all replicas.
-2.  **External Database:** You **MUST** use an external PostgreSQL database (see [`DATABASE_URL`](/getting-started/env-configuration#database_url)). SQLite is **NOT** supported for multiple instances.
-3.  **Redis for WebSockets:** [`ENABLE_WEBSOCKET_SUPPORT=True`](/getting-started/env-configuration#enable_websocket_support) and [`WEBSOCKET_MANAGER=redis`](/getting-started/env-configuration#websocket_manager) with a valid [`WEBSOCKET_REDIS_URL`](/getting-started/env-configuration#websocket_redis_url) are required.
+1.  **Shared Secret Key:** [`WEBUI_SECRET_KEY`](/reference/env-configuration#webui_secret_key) **MUST** be identical on all replicas.
+2.  **External Database:** You **MUST** use an external PostgreSQL database (see [`DATABASE_URL`](/reference/env-configuration#database_url)). SQLite is **NOT** supported for multiple instances.
+3.  **Redis for WebSockets:** [`ENABLE_WEBSOCKET_SUPPORT=True`](/reference/env-configuration#enable_websocket_support) and [`WEBSOCKET_MANAGER=redis`](/reference/env-configuration#websocket_manager) with a valid [`WEBSOCKET_REDIS_URL`](/reference/env-configuration#websocket_redis_url) are required.
 4.  **Shared Storage:** A persistent volume (RWX / ReadWriteMany if possible, or ensuring all replicas map to the same underlying storage for `data/`) is critical for RAG (uploads/vectors) and generated images.
-5.  **External Vector Database (Recommended):** While embedded Chroma works with shared storage, using a dedicated external Vector DB (e.g., [PGVector](/getting-started/env-configuration#pgvector_db_url), Milvus, Qdrant) is **highly recommended** to avoid file locking issues and improve performance.
-6.  **Database Session Sharing (Optional):** For PostgreSQL deployments with adequate resources, consider enabling [`DATABASE_ENABLE_SESSION_SHARING=True`](/getting-started/env-configuration#database_enable_session_sharing) to improve performance under high concurrency.
+5.  **External Vector Database (Required):** The default ChromaDB uses a local SQLite-backed `PersistentClient` that is **not safe for multi-worker or multi-replica deployments**. SQLite connections are not fork-safe, and concurrent writes from multiple processes will crash workers instantly. You **must** use a dedicated external Vector DB (e.g., [PGVector](/reference/env-configuration#pgvector_db_url), [MariaDB Vector](/reference/env-configuration#mariadb_vector_db_url), Milvus, Qdrant) via [`VECTOR_DB`](/reference/env-configuration#vector_db), or run ChromaDB as a [separate HTTP server](/reference/env-configuration#chroma_http_host).
+6.  **Database Session Sharing (Optional):** For PostgreSQL deployments with adequate resources, consider enabling [`DATABASE_ENABLE_SESSION_SHARING=True`](/reference/env-configuration#database_enable_session_sharing) to improve performance under high concurrency.
+7.  **Thread Pool Ceiling:** Set [`THREAD_POOL_SIZE=2000`](/reference/env-configuration#thread_pool_size) (or higher). The default concurrency ceiling for blocking operations is only **40**; at multi-user scale this is exhausted quickly and the app appears to **freeze** while CPU/RAM look fine. It is a ceiling, not a thread/CPU count — a high value is not a contention risk. Never lower it.
+8.  **Throttle Presence Writes:** Set [`DATABASE_USER_ACTIVE_STATUS_UPDATE_INTERVAL=300`](/reference/env-configuration#database_user_active_status_update_interval) (300–500s). Unset (the default) means each user's `last_active_at` is written **on essentially every request** — a continuous flood of tiny `UPDATE`/`COMMIT` transactions that saturates the connection pool at scale for no functional benefit.
 
 ---
 
@@ -54,7 +58,7 @@ env:
 - **Missing Redis:** WebSockets are defaulting to in-memory, so events on Replica A (e.g., LLM generation finish) are not broadcast to the user connected to Replica B.
 
 **Solution:**
-1.  **Configure CORS:** Ensure [`CORS_ALLOW_ORIGIN`](/getting-started/env-configuration#cors_allow_origin) includes your public domain *and* http/https variations.
+1.  **Configure CORS:** Ensure [`CORS_ALLOW_ORIGIN`](/reference/env-configuration#cors_allow_origin) includes your public domain *and* http/https variations.
     
     If you see logs like `engineio.base_server:_log_error_once:354 - https://yourdomain.com is not an accepted origin`, you must update this variable. It accepts a **semicolon-separated list** of allowed origins.
     
@@ -93,16 +97,34 @@ REDIS_URL=redis://your-redis-host:6379/0
 **Symptoms:**
 - Logs show `database is locked` or severe SQL errors.
 - Data saved on one instance disappears on another.
+- `sqlalchemy.exc.TimeoutError: QueuePool limit of size N overflow M reached, connection timed out, timeout 30.00` on **every** request after a short warm-up — not just at peak load.
+- `/api/config`, `/api/v1/chats/?page=1`, OIDC callbacks all stall for 10 s to multiple minutes.
+- `PRAGMA journal_mode=WAL` logged as starting but never completing.
+- Problems appeared suddenly after the 0.8.x → 0.9.x upgrade without any other change in the deployment.
 
 **Cause:**
-Using **SQLite** with multiple replicas. SQLite is a file-based database and does not support concurrent network writes from multiple containers.
+Using **SQLite** with multiple replicas — or with a single replica whose `webui.db` lives on a network filesystem. SQLite is a file-based database; its file locking [does not work reliably over NFS / CIFS / CephFS / Azure Files / any network PVC](https://www.sqlite.org/faq.html#q5) (this is SQLite upstream's own position, not an Open WebUI policy). With the async backend introduced in 0.9.0, this turns from "slow and occasionally locked" into a hard failure mode because slow network `fsync`s hold each pool connection hostage long enough to saturate the connection pool on every request.
 
-**Solution:**
-Migrate to **PostgreSQL**. Update your connection string:
+For the full mechanism (fsync latency + async concurrency + pool saturation + WAL-on-mmap-on-NFS), see [Performance → Disk I/O Latency](/troubleshooting/performance#disk-io-latency-sqlite--storage).
 
-```bash
-DATABASE_URL=postgresql://user:password@postgres-host:5432/openwebui
-```
+**Solution — in order of correctness:**
+
+1. **Migrate to PostgreSQL (strongly recommended, required for multi-replica):**
+   ```bash
+   DATABASE_URL=postgresql+asyncpg://user:password@postgres-host:5432/openwebui
+   ```
+   For Kubernetes / Docker Swarm this is effectively mandatory. Postgres manages its own I/O against its own local storage, so the network-`fsync` pathology disappears entirely. See [Scaling → Step 1](/getting-started/advanced-topics/scaling#step-1--switch-to-postgresql) for the full migration steps.
+
+2. **If you're on a single instance and can move the DB:** put `webui.db` on a locally-attached SSD/NVMe (host bind mount, node-local volume, ephemeral disk) — not on the same NFS/Ceph/EFS mount you use for uploads and RAG files. Your shared storage for `/app/backend/data` is fine; SQLite specifically is the problem.
+
+3. **Do NOT just increase `DATABASE_POOL_SIZE`.** A bigger pool doesn't fix slow `fsync`; it just schedules more concurrent slow `fsync`s against the same slow storage and moves the breaking point by a few seconds. This is a symptom-whack, not a fix.
+
+4. **Temporary damage-control only** (for a deployment you're about to migrate):
+   ```bash
+   DATABASE_POOL_SIZE=1
+   DATABASE_SQLITE_PRAGMA_BUSY_TIMEOUT=30000
+   ```
+   Serializes to a single async connection, trading concurrency for stability. **Not supported long-term.** Also consider `ENABLE_AUTOMATIONS=false` if the background scheduler's periodic poll is the specific thing tipping you over the edge.
 
 ### 5. Uploaded Files or RAG Knowledge Inaccessible
 
@@ -117,7 +139,47 @@ The `/app/backend/data` directory is not shared or is not consistent across repl
 - **Kubernetes:** Use a `PersistentVolumeClaim` with `ReadWriteMany` (RWX) access mode if your storage provider supports it (e.g., NFS, CephFS, AWS EFS).
 - **Docker Swarm/Compose:** Mount a shared volume (e.g., NFS mount) to `/app/backend/data` on all containers.
 
-### 6. Slow Performance in Cloud vs. Local Kubernetes
+### 6. Worker Crashes During Document Upload (ChromaDB + Multi-Worker)
+
+**Symptoms:**
+- Logs show the following sequence, all within the same second:
+  ```
+  save_docs_to_vector_db:1619 - adding to collection file-id
+  INFO:     Waiting for child process [pid]
+  INFO:     Child process [pid] died
+  ```
+- Workers die immediately during RAG document ingestion.
+- The crash is instant (not a timeout).
+
+**Cause:**
+The default ChromaDB configuration uses a local `PersistentClient` backed by **SQLite**. When uvicorn forks multiple workers (`UVICORN_WORKERS > 1`), each worker process inherits a copy of the same SQLite database connection — all pointing at the same file on disk (`data/vector_db/`).
+
+When two workers attempt to write to the collection simultaneously (e.g., during document upload), SQLite's file-level locking fails across forked processes. The result is either a database lock error or a segfault from corrupted internal state inherited across the `fork()` call, which kills the worker process instantly.
+
+This is a [well-known SQLite limitation](https://www.sqlite.org/howtocorrupt.html#_carrying_an_open_database_connection_across_a_fork_): open database connections must not be carried across a `fork()`.
+
+**Solution:**
+You **must** stop using the default local ChromaDB with multiple workers. Pick one of these options:
+
+| Option | Change | Tradeoff |
+|--------|--------|----------|
+| **Keep 1 worker** | Set `UVICORN_WORKERS=1` (the default) | Simplest, but limits concurrency |
+| **Use ChromaDB HTTP mode** | Set [`CHROMA_HTTP_HOST`](/reference/env-configuration#chroma_http_host) / [`CHROMA_HTTP_PORT`](/reference/env-configuration#chroma_http_port) to point to a separate Chroma server | Each worker connects via HTTP instead of SQLite — fully fork-safe |
+| **Switch vector DB** | Set [`VECTOR_DB`](/reference/env-configuration#vector_db) to `pgvector`, `mariadb-vector`, `milvus`, `qdrant`, etc. | These are client-server databases, inherently multi-process safe |
+
+**Recommended fix** — run ChromaDB as a separate server:
+
+```bash
+# Run chroma server separately
+chroma run --host 0.0.0.0 --port 8000 --path /data/vector_db
+
+# Then set these env vars for Open WebUI
+CHROMA_HTTP_HOST=localhost
+CHROMA_HTTP_PORT=8000
+UVICORN_WORKERS=4
+```
+
+### 7. Slow Performance in Cloud vs. Local Kubernetes
 
 **Symptoms:**
 - Open WebUI performs well locally but experiences significant degradation or timeouts when deployed to cloud providers (AKS, EKS, GKE).
@@ -131,7 +193,7 @@ Refer to the **[Cloud Infrastructure Latency](/troubleshooting/performance#%EF%B
 
 If you need more tips for performance improvements, check out the full [Optimization & Performance Guide](/troubleshooting/performance).
 
-### 7. Optimizing Database Performance
+### 8. Optimizing Database Performance
 
 For PostgreSQL deployments with adequate resources, consider these optimizations:
 
@@ -143,7 +205,7 @@ Enabling session sharing can improve performance under high concurrency:
 DATABASE_ENABLE_SESSION_SHARING=true
 ```
 
-See [DATABASE_ENABLE_SESSION_SHARING](/getting-started/env-configuration#database_enable_session_sharing) for details.
+See [DATABASE_ENABLE_SESSION_SHARING](/reference/env-configuration#database_enable_session_sharing) for details.
 
 #### Connection Pool Sizing
 
@@ -156,7 +218,45 @@ DATABASE_POOL_MAX_OVERFLOW=20 (or higher)
 
 **Important:** The combined total (`DATABASE_POOL_SIZE` + `DATABASE_POOL_MAX_OVERFLOW`) should remain well below your database's `max_connections` limit. PostgreSQL defaults to 100 max connections, so keep the combined total under 50-80 per Open WebUI instance to leave room for other clients and maintenance operations.
 
-See [DATABASE_POOL_SIZE](/getting-started/env-configuration#database_pool_size) for details.
+:::warning Pool Size Multiplies with Concurrency
+
+**Each Open WebUI process maintains its own independent connection pool.** This applies to multiple replicas (Kubernetes pods, Docker Swarm replicas) *and* multiple Uvicorn workers within each replica.
+
+The actual maximum number of database connections is:
+
+```
+Total connections = (DATABASE_POOL_SIZE + DATABASE_POOL_MAX_OVERFLOW) × Total processes
+```
+
+Where `Total processes = Number of replicas × UVICORN_WORKERS per replica`.
+
+For example, with `DATABASE_POOL_SIZE=15`, `DATABASE_POOL_MAX_OVERFLOW=20`, 3 replicas, and 2 workers each, you could open up to **210 connections** (35 × 6 processes).
+
+:::
+
+See [DATABASE_POOL_SIZE](/reference/env-configuration#database_pool_size) for details. For comprehensive database optimization including caching, session sharing, and content extraction tuning, see the [Performance & RAM](./performance) guide.
+
+### 9. Function/Tool Dependency Installation Crashes
+
+**Symptoms:**
+- Workers crash with `AssertionError` on startup or when a function/tool is first loaded.
+- Logs show pip locking errors or multiple pip processes competing.
+
+**Cause:**
+When a function or tool specifies `requirements` in its frontmatter, Open WebUI runs `pip install` at runtime. With multiple workers or replicas, each process attempts the installation independently, causing pip's internal lock to detect the conflict and crash.
+
+**Solution:**
+**Set [`ENABLE_PIP_INSTALL_FRONTMATTER_REQUIREMENTS=False`](/reference/env-configuration#enable_pip_install_frontmatter_requirements)** to disable runtime pip installs entirely. Then pre-install all required packages at image build time:
+
+```dockerfile
+FROM ghcr.io/open-webui/open-webui:main
+
+RUN pip install --no-cache-dir python-docx requests beautifulsoup4
+```
+
+Runtime `requirements` installation is only appropriate for single-worker development or homelab environments.
+
+For more details, see the [External Packages](/features/extensibility/plugin/tools/development#external-packages) section of the Tools documentation.
 
 ---
 
@@ -197,8 +297,11 @@ While Open WebUI is designed to be stateless with proper Redis configuration, en
 
 ## Related Documentation
 
-- [Environment Variable Configuration](/getting-started/env-configuration)
+- [Scaling Open WebUI](/getting-started/advanced-topics/scaling) — Step-by-step guide to scaling from single instance to production
+- [Environment Variable Configuration](/reference/env-configuration)
 - [Optimization, Performance & RAM Usage](/troubleshooting/performance)
+- [Redis WebSocket Support](/tutorials/integrations/redis) — Detailed Redis setup tutorial
 - [Troubleshooting Connection Errors](/troubleshooting/connection-error)
-- [Logging Configuration](/getting-started/advanced-topics/logging)
+- [RAG Troubleshooting](/troubleshooting/rag) — Document upload and embedding issues
+- [Logging Open WebUI](/getting-started/advanced-topics/logging)
 
